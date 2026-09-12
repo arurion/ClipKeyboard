@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 地球儀アイコン: 直前のIME(Gboard等)へ戻るための切替ボタンに使用 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path
+        android:pathData="M12,2 A10,10 0 1,0 12.01,2 Z"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M2,12 L22,12"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6" />
+    <path
+        android:pathData="M12,2 C7,6 7,18 12,22"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M12,2 C17,6 17,18 12,22"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6"
+        android:fillColor="#00000000" />
+</vector>

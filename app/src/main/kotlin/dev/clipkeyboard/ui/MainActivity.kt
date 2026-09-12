@@ -4,13 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.inputmethod.InputMethodManager
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import dev.clipkeyboard.R
 import dev.clipkeyboard.data.ClipItem
 import dev.clipkeyboard.data.ClipStore
@@ -34,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         uri?.let { importFile(it) }
     }
 
-    private val storeListener = { refresh() }
+    private val storeListener = { refreshList() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,33 +44,25 @@ class MainActivity : AppCompatActivity() {
         adapter = ClipAdapter(
             items = emptyList(),
             theme = theme,
-            onTap = { /* 一覧管理画面ではタップ=編集を開く */ openEdit(it) },
-            onLongPress = { openEdit(it) },
-            onPinToggle = { ClipStore.togglePin(this, it.id) },
-            onDelete = { ClipStore.delete(this, it.id) }
+            onTap = { openEdit(it) },
+            onLongPress = { openEdit(it) }
         )
         binding.recyclerClips.layoutManager = LinearLayoutManager(this)
-        binding.recyclerClips.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         binding.recyclerClips.adapter = adapter
 
-        binding.btnEnableIme.setOnClickListener {
-            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-        }
-        binding.btnPickIme.setOnClickListener {
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showInputMethodPicker()
-        }
         binding.btnImport.setOnClickListener { importLauncher.launch("text/*") }
         binding.btnTheme.setOnClickListener {
             startActivity(Intent(this, ThemeSettingsActivity::class.java))
         }
-        binding.btnClearAll.setOnClickListener {
-            ClipStore.clearAllUnpinned(this)
-            Toast.makeText(this, "ピン留め以外を削除しました", Toast.LENGTH_SHORT).show()
+        binding.btnOverflowMenu.setOnClickListener { showOverflowMenu() }
+        binding.bannerAction.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+        }
+        binding.fabAdd.setOnClickListener {
+            startActivity(Intent(this, EditClipActivity::class.java))
         }
 
         ClipStore.addListener(storeListener)
-        refresh()
 
         if (intent?.getStringExtra(EXTRA_ACTION) == ACTION_IMPORT) {
             importLauncher.launch("text/*")
@@ -80,7 +71,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refresh()
+        // テーマとデータを同時に再読込し、テーマ設定画面から戻った際の見た目未更新を防ぐ。
+        val currentTheme = ThemeConfig.load(this)
+        adapter.updateThemeAndItems(currentTheme, ClipStore.getAll(this))
+        evaluateSetupStatus()
     }
 
     override fun onDestroy() {
@@ -88,8 +82,53 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun refresh() {
+    private fun refreshList() {
         adapter.submit(ClipStore.getAll(this))
+    }
+
+    /** 本IMEが未有効・未選択の場合のみバナーを表示し、済んでいれば隠す。 */
+    private fun evaluateSetupStatus() {
+        val enabledImes = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_INPUT_METHODS).orEmpty()
+        val isEnabled = enabledImes.contains(packageName)
+
+        val defaultIme = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD).orEmpty()
+        val isSelectedIme = defaultIme.contains(packageName)
+
+        binding.setupBanner.visibility = if (!isEnabled) android.view.View.VISIBLE else android.view.View.GONE
+        if (isEnabled && !isSelectedIme) {
+            binding.bannerTitle.text = "キーボードを切り替えましょう"
+            binding.bannerBody.text = "入力欄を長押しし「入力方法を選択」からClipKeyboardを選んでください"
+        }
+    }
+
+    private fun showOverflowMenu() {
+        val popup = PopupMenu(this, binding.btnOverflowMenu)
+        popup.menu.add("すべての履歴を消去(ピン留めを除く)")
+        popup.setOnMenuItemClickListener {
+            confirmClearAll()
+            true
+        }
+        popup.show()
+    }
+
+    /** 破壊的操作なので二重確認を必須化する。 */
+    private fun confirmClearAll() {
+        AlertDialog.Builder(this)
+            .setTitle("ピン留め以外の履歴を消去しますか？")
+            .setMessage("この操作は取り消せません。ピン留め済みのクリップは残ります。")
+            .setPositiveButton("消去する") { _, _ ->
+                AlertDialog.Builder(this)
+                    .setTitle("本当によろしいですか？")
+                    .setMessage("最終確認です。ピン留め以外のすべての履歴が削除されます。")
+                    .setPositiveButton("完全に消去する") { _, _ ->
+                        ClipStore.clearAllUnpinned(this)
+                        Toast.makeText(this, "ピン留め以外を削除しました", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("キャンセル", null)
+                    .show()
+            }
+            .setNegativeButton("キャンセル", null)
+            .show()
     }
 
     private fun openEdit(item: ClipItem) {
@@ -112,21 +151,20 @@ class MainActivity : AppCompatActivity() {
                 val lines = content.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
                 if (lines.size > 1) {
-                    // 複数行ある場合は「1行=1クリップ」と「全文まとめて1クリップ」を選ばせる
-                    androidx.appcompat.app.AlertDialog.Builder(this)
+                    AlertDialog.Builder(this)
                         .setTitle("インポート方法")
                         .setMessage("${lines.size} 行のテキストが見つかりました。")
                         .setPositiveButton("1行ずつ別々のクリップにする") { _, _ ->
-                            lines.forEach { ClipStore.addOrTouch(this, it, fileName) }
+                            lines.forEach { ClipStore.createManual(this, it, fileName) }
                             Toast.makeText(this, "${lines.size}件を追加しました", Toast.LENGTH_SHORT).show()
                         }
                         .setNegativeButton("全文を1件のクリップにする") { _, _ ->
-                            ClipStore.addOrTouch(this, content, fileName)
+                            ClipStore.createManual(this, content, fileName)
                             Toast.makeText(this, "1件を追加しました", Toast.LENGTH_SHORT).show()
                         }
                         .show()
                 } else {
-                    ClipStore.addOrTouch(this, content, fileName)
+                    ClipStore.createManual(this, content, fileName)
                     Toast.makeText(this, "追加しました", Toast.LENGTH_SHORT).show()
                 }
             }

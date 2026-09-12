@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="6dp">
+
+    <TextView
+        android:id="@+id/field_label"
+        android:layout_width="86dp"
+        android:layout_height="wrap_content"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@+id/field_hex"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:inputType="text"
+        android:maxLines="1" />
+
+    <!-- 現在の色を示すチップ。タップで16進入力欄にフォーカスする(探索的操作の入口)。 -->
+    <View
+        android:id="@+id/field_swatch"
+        android:layout_width="32dp"
+        android:layout_height="32dp" />
+</LinearLayout>

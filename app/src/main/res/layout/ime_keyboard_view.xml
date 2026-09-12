@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tinted Glass UI: 高さを244dpに完全固定し、クリップの件数増減で
+     周囲のレイアウトが伸縮しない(ゼロ・レイアウトシフト)構造にする。
+     色・角丸などのテーマ値はすべて実行時に ThemeConfig から適用する(このXMLではダミー値)。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ime_root"
+    android:layout_width="match_parent"
+    android:layout_height="244dp"
+    android:orientation="vertical">
+
+    <!-- 機能的追従ヘッダー(ティントガラス調)。地球儀=IME切替/検索/件数/追加/閉じる を1行に集約。 -->
+    <LinearLayout
+        android:id="@+id/ime_header"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="4dp">
+
+        <ImageButton
+            android:id="@+id/btn_switch_ime"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="前のキーボードに戻る"
+            android:padding="8dp"
+            android:src="@drawable/ic_language_24" />
+
+        <EditText
+            android:id="@+id/edit_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
+            android:background="@null"
+            android:hint="絞り込み"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLines="1"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/text_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="2dp"
+            android:textSize="11sp" />
+
+        <ImageButton
+            android:id="@+id/btn_quick_add"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="定型文を作成"
+            android:padding="8dp"
+            android:src="@drawable/ic_add_24" />
+
+        <ImageButton
+            android:id="@+id/btn_close_keyboard"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="キーボードを閉じる"
+            android:padding="8dp"
+            android:src="@drawable/ic_keyboard_hide_24" />
+    </LinearLayout>
+
+    <!-- 面と影の境界(黒い罫線の代わりの微細なシャドウ帯) -->
+    <View
+        android:id="@+id/header_shadow"
+        android:layout_width="match_parent"
+        android:layout_height="3dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_clips"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingVertical="4dp" />
+
+    <TextView
+        android:id="@+id/text_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="コピーした内容がここに並びます。右上の「＋」から定型文を作ることもできます。"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+</LinearLayout>

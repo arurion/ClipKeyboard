@@ -9,13 +9,15 @@ import android.graphics.Color
  * 追加のシリアライズライブラリは不要。
  */
 data class ThemeConfig(
-    val backgroundColor: Int = Color.parseColor("#1E1F22"),
-    val rowBackgroundColor: Int = Color.parseColor("#2B2D30"),
-    val textColor: Int = Color.parseColor("#FFFFFF"),
-    val subTextColor: Int = Color.parseColor("#9AA0A6"),
-    val accentColor: Int = Color.parseColor("#8AB4F8"),
-    val dangerColor: Int = Color.parseColor("#F28B82"),
-    val cornerRadiusDp: Float = 10f,
+    // デフォルトは Tinted Glass UI Philosophy に準拠したライトテーマ
+    // (サックスホワイト基調・Slateテキスト・Skyアクセント)。
+    val backgroundColor: Int = Color.parseColor("#EAF5FF"),
+    val rowBackgroundColor: Int = Color.parseColor("#F8FAFC"),
+    val textColor: Int = Color.parseColor("#0F172A"),
+    val subTextColor: Int = Color.parseColor("#475569"),
+    val accentColor: Int = Color.parseColor("#0369A1"),
+    val dangerColor: Int = Color.parseColor("#E11D48"),
+    val cornerRadiusDp: Float = 4f,
     val fontScale: Float = 1.0f,
     val hapticFeedbackEnabled: Boolean = true
 ) {

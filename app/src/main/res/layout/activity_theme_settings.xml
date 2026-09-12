@@ -9,6 +9,40 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="外観とテーマ"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_reset"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="リセット" />
+        </LinearLayout>
+
+        <!-- リアルタイム・キーボードプレビュー: 色やスライダーを操作した瞬間に反映される -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="プレビュー"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp" />
+        <FrameLayout
+            android:id="@+id/preview_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -22,28 +56,67 @@
             android:orientation="horizontal"
             android:layout_marginBottom="16dp"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="背景色 (#RRGGBB)"/>
-        <EditText android:id="@+id/edit_bg" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="カラー調整"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="行の背景色"/>
-        <EditText android:id="@+id/edit_row_bg" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <!-- 各カラー行: ラベル + 16進入力 + 現在色のチップ(タップで即プレビュー更新) -->
+        <include layout="@layout/row_color_field" android:id="@+id/row_bg"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_row_bg"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_text"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_sub_text"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_accent"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_danger"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="文字色"/>
-        <EditText android:id="@+id/edit_text" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="寸法と触覚"
+            android:textStyle="bold" />
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="補助文字色"/>
-        <EditText android:id="@+id/edit_sub_text" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="アクセント色"/>
-        <EditText android:id="@+id/edit_accent" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="警告色(削除ボタン等)"/>
-        <EditText android:id="@+id/edit_danger" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="角丸の大きさ"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="角の丸み" />
+            <TextView
+                android:id="@+id/label_corner_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4 dp" />
+        </LinearLayout>
         <SeekBar android:id="@+id/seek_corner" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="30"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="文字サイズ倍率"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="文字サイズ" />
+            <TextView
+                android:id="@+id/label_font_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100 %" />
+        </LinearLayout>
         <SeekBar android:id="@+id/seek_font_scale" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100"/>
 
         <LinearLayout
@@ -63,27 +136,11 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
-        <LinearLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_reset"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="初期化"/>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_save"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="保存"/>
-        </LinearLayout>
+            android:layout_marginTop="20dp"
+            android:text="保存"/>
     </LinearLayout>
 </ScrollView>

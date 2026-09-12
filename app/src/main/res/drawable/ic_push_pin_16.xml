@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ピン留め状態インジケーター(絵文字📌の代替) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp" android:height="16dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M14,2 L14,4 L15,4 L15,10 L18,13 L13,13 L13,21 L11,21 L11,13 L6,13 L9,10 L9,4 L10,4 L10,2 Z" />
+</vector>

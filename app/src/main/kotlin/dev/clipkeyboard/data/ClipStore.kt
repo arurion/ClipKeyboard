@@ -70,6 +70,27 @@ object ClipStore {
         return item
     }
 
+    /**
+     * メイン画面の「＋」やキーボードの「定型文を作成」から呼ばれる明示的な新規作成。
+     * addOrTouch と異なり同一テキストとの統合(重複排除)を行わない
+     * — ユーザーが意図して複数の定型文を作る操作のため。
+     */
+    fun createManual(context: Context, text: String, label: String? = null, pinned: Boolean = false): ClipItem {
+        val now = System.currentTimeMillis()
+        val item = ClipItem(
+            id = UUID.randomUUID().toString(),
+            text = text,
+            label = label,
+            pinned = pinned,
+            createdAt = now,
+            updatedAt = now
+        )
+        val current = getAll(context).toMutableList()
+        current.add(0, item)
+        saveAll(context, current)
+        return item
+    }
+
     fun update(context: Context, item: ClipItem) {
         val current = getAll(context).toMutableList()
         val idx = current.indexOfFirst { it.id == item.id }
