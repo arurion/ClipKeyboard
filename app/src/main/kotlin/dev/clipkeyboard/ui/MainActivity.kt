@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.inputmethod.InputMethodManager
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -86,19 +87,20 @@ class MainActivity : AppCompatActivity() {
         adapter.submit(ClipStore.getAll(this))
     }
 
-    /** 本IMEが未有効・未選択の場合のみバナーを表示し、済んでいれば隠す。 */
+    /**
+     * 本IMEが未有効の場合のみバナーを表示する。
+     *
+     * 以前は Settings.Secure.ENABLED_INPUT_METHODS / DEFAULT_INPUT_METHOD を直接読んでいたが、
+     * Android 14 (API 34) 以降はこれらのキーが targetSdkVersion 34+ のアプリからは
+     * SecurityException を投げるようになった(プライバシー強化のための制限)。
+     * 代わりに制限のない公式API InputMethodManager#getEnabledInputMethodList() を使う。
+     * なお「現在選択中のIMEかどうか」を同様に非推奨なしで判定する公開APIは無いため、
+     * バナーは「有効かどうか」のみで判定するようシンプル化している。
+     */
     private fun evaluateSetupStatus() {
-        val enabledImes = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_INPUT_METHODS).orEmpty()
-        val isEnabled = enabledImes.contains(packageName)
-
-        val defaultIme = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD).orEmpty()
-        val isSelectedIme = defaultIme.contains(packageName)
-
-        binding.setupBanner.visibility = if (!isEnabled) android.view.View.VISIBLE else android.view.View.GONE
-        if (isEnabled && !isSelectedIme) {
-            binding.bannerTitle.text = "キーボードを切り替えましょう"
-            binding.bannerBody.text = "入力欄を長押しし「入力方法を選択」からClipKeyboardを選んでください"
-        }
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        val isEnabled = imm.enabledInputMethodList.any { it.packageName == packageName }
+        binding.setupBanner.visibility = if (isEnabled) android.view.View.GONE else android.view.View.VISIBLE
     }
 
     private fun showOverflowMenu() {

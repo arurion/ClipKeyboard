@@ -3,6 +3,20 @@
 このプロジェクトの変更点は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)
 の形式に沿って記録する。
 
+## [1.1.1] - 2026-09-12
+
+### 修正
+- **起動時に強制終了する重大な不具合を修正。**
+  `MainActivity#onResume` が `Settings.Secure.ENABLED_INPUT_METHODS` /
+  `DEFAULT_INPUT_METHOD` を直接読んでいたが、Android 14 (API 34) 以降は
+  これらのキーが `targetSdkVersion` 34 以上のアプリからは
+  `SecurityException` を投げるようになっており、アプリ起動直後に必ず
+  クラッシュしていた。制限のない公式API
+  `InputMethodManager#getEnabledInputMethodList()` を使う実装に置き換えた。
+  なお、この変更に伴い「キーボードは有効だが選択されていない」状態を
+  区別する案内は行わず、「有効かどうか」のみでバナー表示を判定するよう
+  簡略化した。
+
 ## [1.1.0] - 2026-09-12
 
 ### 追加
