@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ClipKeyboard</string>
+    <string name="edit_clip">クリップを編集</string>
+    <string name="theme_settings">テーマ設定</string>
+</resources>

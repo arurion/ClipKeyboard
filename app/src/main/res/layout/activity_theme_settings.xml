@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="プリセット"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+        <LinearLayout
+            android:id="@+id/preset_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="背景色 (#RRGGBB)"/>
+        <EditText android:id="@+id/edit_bg" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="行の背景色"/>
+        <EditText android:id="@+id/edit_row_bg" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="文字色"/>
+        <EditText android:id="@+id/edit_text" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="補助文字色"/>
+        <EditText android:id="@+id/edit_sub_text" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="アクセント色"/>
+        <EditText android:id="@+id/edit_accent" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="警告色(削除ボタン等)"/>
+        <EditText android:id="@+id/edit_danger" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="角丸の大きさ"/>
+        <SeekBar android:id="@+id/seek_corner" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="30"/>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="文字サイズ倍率"/>
+        <SeekBar android:id="@+id/seek_font_scale" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="タップ時の振動フィードバック"/>
+            <Switch
+                android:id="@+id/switch_haptic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_reset"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="初期化"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="保存"/>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
