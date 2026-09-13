@@ -7,11 +7,6 @@ import androidx.appcompat.app.AppCompatActivity
 import dev.clipkeyboard.data.ClipStore
 import dev.clipkeyboard.databinding.ActivityEditClipBinding
 
-/**
- * クリップの編集画面。
- * EXTRA_CLIP_ID が渡されなければ「新規作成」モードとして動作する
- * (メイン画面のFABやキーボードの「＋」から呼ばれる場合はこちら)。
- */
 class EditClipActivity : AppCompatActivity() {
 
     companion object {
@@ -46,6 +41,10 @@ class EditClipActivity : AppCompatActivity() {
             binding.btnDelete.visibility = android.view.View.VISIBLE
         }
 
+        binding.rowPinned.setOnClickListener {
+            binding.switchPinned.toggle()
+        }
+
         binding.btnBack.setOnClickListener { finish() }
 
         binding.btnSave.setOnClickListener {
@@ -78,8 +77,8 @@ class EditClipActivity : AppCompatActivity() {
         binding.btnDelete.setOnClickListener {
             val id = existingId ?: return@setOnClickListener
             AlertDialog.Builder(this)
-                .setTitle("このクリップを削除しますか？")
-                .setMessage("この操作は取り消せません。")
+                .setTitle("クリップの削除")
+                .setMessage("このクリップを削除しますか？\nこの操作は取り消せません。")
                 .setPositiveButton("削除する") { _, _ ->
                     ClipStore.delete(this, id)
                     finish()

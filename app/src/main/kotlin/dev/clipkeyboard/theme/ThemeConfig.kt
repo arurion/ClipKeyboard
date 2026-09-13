@@ -3,21 +3,14 @@ package dev.clipkeyboard.theme
 import android.content.Context
 import android.graphics.Color
 
-/**
- * ユーザーが編集可能なキーボード配色・見た目の設定。
- * SharedPreferences (プレーンな key/value) にそのまま保存するので、
- * 追加のシリアライズライブラリは不要。
- */
 data class ThemeConfig(
-    // デフォルトは Tinted Glass UI Philosophy に準拠したライトテーマ
-    // (サックスホワイト基調・Slateテキスト・Skyアクセント)。
     val backgroundColor: Int = Color.parseColor("#EAF5FF"),
     val rowBackgroundColor: Int = Color.parseColor("#F8FAFC"),
     val textColor: Int = Color.parseColor("#0F172A"),
     val subTextColor: Int = Color.parseColor("#475569"),
     val accentColor: Int = Color.parseColor("#0369A1"),
     val dangerColor: Int = Color.parseColor("#E11D48"),
-    val cornerRadiusDp: Float = 4f,
+    val cornerRadiusDp: Float = 6f,
     val fontScale: Float = 1.0f,
     val hapticFeedbackEnabled: Boolean = true
 ) {

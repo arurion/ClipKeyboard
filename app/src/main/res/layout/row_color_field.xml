@@ -8,22 +8,25 @@
 
     <TextView
         android:id="@+id/field_label"
-        android:layout_width="86dp"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:textSize="12sp" />
+        android:textColor="#475569"
+        android:textSize="13sp" />
 
     <EditText
         android:id="@+id/field_hex"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginEnd="8dp"
-        android:inputType="text"
-        android:maxLines="1" />
+        android:layout_marginEnd="10dp"
+        android:fontFamily="monospace"
+        android:inputType="textNoSuggestions"
+        android:maxLines="1"
+        android:textColor="#0F172A"
+        android:textSize="14sp" />
 
-    <!-- 現在の色を示すチップ。タップで16進入力欄にフォーカスする(探索的操作の入口)。 -->
     <View
         android:id="@+id/field_swatch"
-        android:layout_width="32dp"
-        android:layout_height="32dp" />
+        android:layout_width="34dp"
+        android:layout_height="34dp" />
 </LinearLayout>

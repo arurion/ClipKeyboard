@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 実機のIME全体(244dp)をそのまま埋め込むと縦スクロール画面内で扱いづらいため、
-     ヘッダー+サンプル行2つだけの縮小モックとして用意する。
-     色を変更した瞬間にここへ反映することで「探索的な操作性」を実現する。 -->
+<!-- 本物のIMEと同じヘッダー構造・スタイルを持つリアルタイムプレビュー -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/preview_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:background="@drawable/bg_preview_container"
+    android:orientation="vertical"
+    android:padding="2dp">
 
     <LinearLayout
         android:id="@+id/preview_header"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:gravity="center_vertical"
-        android:paddingHorizontal="10dp">
+        android:paddingHorizontal="8dp">
 
         <ImageView
             android:id="@+id/preview_header_icon"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:src="@drawable/ic_language_24" />
 
         <TextView
@@ -33,15 +34,15 @@
 
         <ImageView
             android:id="@+id/preview_header_close"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:src="@drawable/ic_keyboard_hide_24" />
     </LinearLayout>
 
     <View
         android:id="@+id/preview_header_shadow"
         android:layout_width="match_parent"
-        android:layout_height="3dp" />
+        android:layout_height="2dp" />
 
     <include
         android:id="@+id/preview_row1"

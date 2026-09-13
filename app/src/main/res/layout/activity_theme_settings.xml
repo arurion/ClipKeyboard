@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#EAF5FF"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,28 +18,34 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:layout_marginBottom="12dp">
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="外観とテーマ"
-                android:textSize="18sp"
+                android:textColor="#0F172A"
+                android:textSize="20sp"
                 android:textStyle="bold" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_reset"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="リセット" />
+                android:text="リセット"
+                android:textColor="#E11D48" />
         </LinearLayout>
 
-        <!-- リアルタイム・キーボードプレビュー: 色やスライダーを操作した瞬間に反映される -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="プレビュー"
+            android:text="ライブプレビュー"
+            android:textColor="#475569"
             android:textSize="12sp"
-            android:layout_marginBottom="4dp" />
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
         <FrameLayout
             android:id="@+id/preview_container"
             android:layout_width="match_parent"
@@ -47,41 +56,45 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="プリセット"
+            android:textColor="#0F172A"
             android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
-        <LinearLayout
-            android:id="@+id/preset_container"
+            android:layout_marginBottom="6dp"/>
+
+        <!-- 画面外はみ出し防止の HorizontalScrollView -->
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp"/>
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            android:layout_marginBottom="16dp">
+            <LinearLayout
+                android:id="@+id/preset_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="カラー調整"
+            android:textColor="#0F172A"
             android:textStyle="bold"
             android:layout_marginBottom="4dp"/>
 
-        <!-- 各カラー行: ラベル + 16進入力 + 現在色のチップ(タップで即プレビュー更新) -->
-        <include layout="@layout/row_color_field" android:id="@+id/row_bg"
-            android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <include layout="@layout/row_color_field" android:id="@+id/row_row_bg"
-            android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <include layout="@layout/row_color_field" android:id="@+id/row_text"
-            android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <include layout="@layout/row_color_field" android:id="@+id/row_sub_text"
-            android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <include layout="@layout/row_color_field" android:id="@+id/row_accent"
-            android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <include layout="@layout/row_color_field" android:id="@+id/row_danger"
-            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_bg" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_row_bg" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_text" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_sub_text" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_accent" />
+        <include layout="@layout/row_color_field" android:id="@+id/row_danger" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="寸法と触覚"
+            android:textColor="#0F172A"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -93,28 +106,33 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="角の丸み" />
+                android:text="角の丸み"
+                android:textColor="#475569" />
             <TextView
                 android:id="@+id/label_corner_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#0369A1"
                 android:text="4 dp" />
         </LinearLayout>
-        <SeekBar android:id="@+id/seek_corner" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="30"/>
+        <SeekBar android:id="@+id/seek_corner" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="24"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="文字サイズ" />
+                android:text="文字サイズ"
+                android:textColor="#475569" />
             <TextView
                 android:id="@+id/label_font_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#0369A1"
                 android:text="100 %" />
         </LinearLayout>
         <SeekBar android:id="@+id/seek_font_scale" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100"/>
@@ -129,7 +147,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="タップ時の振動フィードバック"/>
+                android:text="タップ時の振動フィードバック"
+                android:textColor="#0F172A" />
             <Switch
                 android:id="@+id/switch_haptic"
                 android:layout_width="wrap_content"
@@ -139,8 +158,10 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_marginTop="20dp"
-            android:text="保存"/>
+            android:backgroundTint="#0369A1"
+            android:text="テーマを保存"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 </ScrollView>

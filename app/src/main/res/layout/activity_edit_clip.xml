@@ -3,27 +3,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#EAF5FF"
     android:orientation="vertical">
 
-    <!-- 保存ボタンを常にツールバー右上に固定し、スクロールやキーボード表示で
-         押せなくなる問題を無くす。 -->
+    <!-- ツールバー：保存ボタンを右上に固定してキーボード被りを防ぐ -->
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="4dp"
-        android:paddingVertical="8dp">
+        android:paddingHorizontal="8dp">
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="戻る"
-            android:padding="8dp"
-            android:src="@drawable/ic_close_24" />
+            android:padding="10dp"
+            android:src="@drawable/ic_close_24"
+            app:tint="#0F172A" />
 
         <TextView
             android:id="@+id/toolbar_title"
@@ -31,34 +30,38 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:paddingStart="8dp"
-            android:text="クリップを編集"
-            android:textSize="16sp"
+            android:text="@string/edit_clip"
+            android:textColor="#0F172A"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/btn_delete"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="削除"
-            android:padding="8dp"
+            android:padding="10dp"
             android:src="@drawable/ic_delete_24"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:tint="#E11D48" />
 
         <ImageButton
             android:id="@+id/btn_save"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="保存"
-            android:padding="8dp"
-            android:src="@drawable/ic_check_24" />
+            android:padding="10dp"
+            android:src="@drawable/ic_check_24"
+            app:tint="#0369A1" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -71,27 +74,30 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="ラベル(任意)"
-                app:boxCornerRadiusBottomEnd="4dp"
-                app:boxCornerRadiusBottomStart="4dp"
-                app:boxCornerRadiusTopEnd="4dp"
-                app:boxCornerRadiusTopStart="4dp">
+                app:boxCornerRadiusBottomEnd="6dp"
+                app:boxCornerRadiusBottomStart="6dp"
+                app:boxCornerRadiusTopEnd="6dp"
+                app:boxCornerRadiusTopStart="6dp"
+                app:boxStrokeColor="#0369A1">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_label"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:textColor="#0F172A" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:hint="本文"
-                app:boxCornerRadiusBottomEnd="4dp"
-                app:boxCornerRadiusBottomStart="4dp"
-                app:boxCornerRadiusTopEnd="4dp"
-                app:boxCornerRadiusTopStart="4dp">
+                app:boxCornerRadiusBottomEnd="6dp"
+                app:boxCornerRadiusBottomStart="6dp"
+                app:boxCornerRadiusTopEnd="6dp"
+                app:boxCornerRadiusTopStart="6dp"
+                app:boxStrokeColor="#0369A1">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_body"
@@ -99,20 +105,28 @@
                     android:layout_height="wrap_content"
                     android:gravity="top|start"
                     android:inputType="textMultiLine"
-                    android:minLines="8" />
+                    android:minLines="8"
+                    android:textColor="#0F172A" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
+                android:id="@+id/row_pinned"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:background="@drawable/bg_control_dock"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="12dp">
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="ピン留め(自動削除されない)" />
+                    android:text="ピン留め (自動削除されない)"
+                    android:textColor="#0F172A"
+                    android:textSize="14sp" />
+
                 <Switch
                     android:id="@+id/switch_pinned"
                     android:layout_width="wrap_content"

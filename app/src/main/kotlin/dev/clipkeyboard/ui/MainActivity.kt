@@ -1,5 +1,8 @@
 package dev.clipkeyboard.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -11,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import dev.clipkeyboard.R
 import dev.clipkeyboard.data.ClipItem
 import dev.clipkeyboard.data.ClipStore
 import dev.clipkeyboard.databinding.ActivityMainBinding
@@ -45,20 +47,28 @@ class MainActivity : AppCompatActivity() {
         adapter = ClipAdapter(
             items = emptyList(),
             theme = theme,
-            onTap = { openEdit(it) },
-            onLongPress = { openEdit(it) }
+            onTap = { item -> copyToClipboard(item) },
+            onLongPress = { item -> openEdit(item) }
         )
         binding.recyclerClips.layoutManager = LinearLayoutManager(this)
         binding.recyclerClips.adapter = adapter
+
+        // ① 有効化設定
+        binding.btnEnableIme.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+        }
+
+        // ② 切替ダイアログ
+        binding.btnPickIme.setOnClickListener {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showInputMethodPicker()
+        }
 
         binding.btnImport.setOnClickListener { importLauncher.launch("text/*") }
         binding.btnTheme.setOnClickListener {
             startActivity(Intent(this, ThemeSettingsActivity::class.java))
         }
         binding.btnOverflowMenu.setOnClickListener { showOverflowMenu() }
-        binding.bannerAction.setOnClickListener {
-            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-        }
         binding.fabAdd.setOnClickListener {
             startActivity(Intent(this, EditClipActivity::class.java))
         }
@@ -72,10 +82,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // テーマとデータを同時に再読込し、テーマ設定画面から戻った際の見た目未更新を防ぐ。
         val currentTheme = ThemeConfig.load(this)
         adapter.updateThemeAndItems(currentTheme, ClipStore.getAll(this))
-        evaluateSetupStatus()
+        updateImeStatusUi()
     }
 
     override fun onDestroy() {
@@ -84,28 +93,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshList() {
-        adapter.submit(ClipStore.getAll(this))
+        val items = ClipStore.getAll(this)
+        adapter.submit(items)
+        binding.textListHeader.text = "保存されたクリップ (${items.size}件)"
     }
 
-    /**
-     * 本IMEが未有効の場合のみバナーを表示する。
-     *
-     * 以前は Settings.Secure.ENABLED_INPUT_METHODS / DEFAULT_INPUT_METHOD を直接読んでいたが、
-     * Android 14 (API 34) 以降はこれらのキーが targetSdkVersion 34+ のアプリからは
-     * SecurityException を投げるようになった(プライバシー強化のための制限)。
-     * 代わりに制限のない公式API InputMethodManager#getEnabledInputMethodList() を使う。
-     * なお「現在選択中のIMEかどうか」を同様に非推奨なしで判定する公開APIは無いため、
-     * バナーは「有効かどうか」のみで判定するようシンプル化している。
-     */
-    private fun evaluateSetupStatus() {
+    private fun copyToClipboard(item: ClipItem) {
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText(item.label ?: "Clip", item.text)
+        cm.setPrimaryClip(clip)
+        val preview = if (item.text.length > 20) item.text.take(20) + "…" else item.text
+        Toast.makeText(this, "コピーしました: $preview", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun updateImeStatusUi() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val isEnabled = imm.enabledInputMethodList.any { it.packageName == packageName }
-        binding.setupBanner.visibility = if (isEnabled) android.view.View.GONE else android.view.View.VISIBLE
+
+        if (isEnabled) {
+            binding.btnEnableIme.text = "✓ 有効化済み (設定)"
+            binding.btnEnableIme.alpha = 0.8f
+        } else {
+            binding.btnEnableIme.text = "① キーボード有効化"
+            binding.btnEnableIme.alpha = 1.0f
+        }
     }
 
     private fun showOverflowMenu() {
         val popup = PopupMenu(this, binding.btnOverflowMenu)
-        popup.menu.add("すべての履歴を消去(ピン留めを除く)")
+        popup.menu.add("ピン留め以外の履歴をすべて消去")
         popup.setOnMenuItemClickListener {
             confirmClearAll()
             true
@@ -113,21 +129,13 @@ class MainActivity : AppCompatActivity() {
         popup.show()
     }
 
-    /** 破壊的操作なので二重確認を必須化する。 */
     private fun confirmClearAll() {
         AlertDialog.Builder(this)
-            .setTitle("ピン留め以外の履歴を消去しますか？")
-            .setMessage("この操作は取り消せません。ピン留め済みのクリップは残ります。")
+            .setTitle("履歴の全消去")
+            .setMessage("ピン留めされていないクリップをすべて削除しますか？\nこの操作は取り消せません。")
             .setPositiveButton("消去する") { _, _ ->
-                AlertDialog.Builder(this)
-                    .setTitle("本当によろしいですか？")
-                    .setMessage("最終確認です。ピン留め以外のすべての履歴が削除されます。")
-                    .setPositiveButton("完全に消去する") { _, _ ->
-                        ClipStore.clearAllUnpinned(this)
-                        Toast.makeText(this, "ピン留め以外を削除しました", Toast.LENGTH_SHORT).show()
-                    }
-                    .setNegativeButton("キャンセル", null)
-                    .show()
+                ClipStore.clearAllUnpinned(this)
+                Toast.makeText(this, "ピン留め以外を消去しました", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("キャンセル", null)
             .show()
@@ -139,12 +147,10 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    /** テキストファイルの中身を丸ごと1件のクリップとして読み込む。行ごとに分けたい場合は「行単位」オプションも用意。 */
     private fun importFile(uri: Uri) {
         try {
             contentResolver.openInputStream(uri)?.use { input ->
-                val reader = BufferedReader(InputStreamReader(input))
-                val content = reader.readText()
+                val content = BufferedReader(InputStreamReader(input)).readText()
                 if (content.isBlank()) {
                     Toast.makeText(this, "ファイルが空です", Toast.LENGTH_SHORT).show()
                     return

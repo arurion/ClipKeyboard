@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Tinted Glass UI Philosophy に準拠した上品なサックスライトテーマ -->
     <style name="Theme.ClipKeyboard" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#8AB4F8</item>
-        <item name="colorPrimaryDark">#1E1F22</item>
-        <item name="colorAccent">#8AB4F8</item>
+        <item name="colorPrimary">#0369A1</item>
+        <item name="colorPrimaryVariant">#0284C7</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#0284C7</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:statusBarColor">#EAF5FF</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorBackground">#EAF5FF</item>
     </style>
 </resources>

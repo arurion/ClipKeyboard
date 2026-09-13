@@ -14,11 +14,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * クリップ一覧の行アダプタ。
- * Tinted Glass UI 方針に基づき、絵文字(📌/🗑)は使わずベクタードローアブル+テーマ色のTintで表現する。
- * 削除は行の表面から隠蔽し、タップは即時コミット、長押しはクイックメニュー表示を呼び出し元に委ねる。
- */
 class ClipAdapter(
     private var items: List<ClipItem>,
     private var theme: ThemeConfig,
@@ -33,7 +28,6 @@ class ClipAdapter(
         notifyDataSetChanged()
     }
 
-    /** テーマ変更(設定画面から戻ってきた際など)とデータを同時に反映する。 */
     fun updateThemeAndItems(newTheme: ThemeConfig, newItems: List<ClipItem>) {
         theme = newTheme
         items = newItems
@@ -80,7 +74,10 @@ class ClipAdapter(
             }
             onTap(item)
         }
-        holder.root.setOnLongClickListener { onLongPress(item); true }
+        holder.root.setOnLongClickListener {
+            onLongPress(item)
+            true
+        }
     }
 
     override fun getItemCount(): Int = items.size

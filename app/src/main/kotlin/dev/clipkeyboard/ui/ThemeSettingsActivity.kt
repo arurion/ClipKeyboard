@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.widget.LinearLayout
 import android.widget.SeekBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import dev.clipkeyboard.databinding.ActivityThemeSettingsBinding
@@ -16,13 +16,6 @@ import dev.clipkeyboard.databinding.RowColorFieldBinding
 import dev.clipkeyboard.theme.ThemeConfig
 import dev.clipkeyboard.theme.ThemeUtils
 
-/**
- * 16進コードの手打ちは残しつつ(自由度を確保しつつ)、
- * ・色チップによる現在色の直感表示
- * ・変更した瞬間に反映されるミニキーボードのライブプレビュー
- * ・スライダーの数値表示
- * で「探索的な操作性」(Tinted Glass UI Philosophy 原則7)を満たす設定画面。
- */
 class ThemeSettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityThemeSettingsBinding
@@ -30,9 +23,10 @@ class ThemeSettingsActivity : AppCompatActivity() {
 
     private data class ColorField(val row: RowColorFieldBinding, val label: String, val get: (ThemeConfig) -> Int)
     private lateinit var colorFields: List<ColorField>
+    private var isBinding = false
 
     private val presets = listOf(
-        "デフォルト・ガラス" to ThemeConfig(),
+        "サックス・ガラス" to ThemeConfig(),
         "スレート" to ThemeConfig(
             backgroundColor = Color.parseColor("#0F172A"),
             rowBackgroundColor = Color.parseColor("#1E293B"),
@@ -68,35 +62,43 @@ class ThemeSettingsActivity : AppCompatActivity() {
         )
         colorFields.forEach { field ->
             field.row.fieldLabel.text = field.label
-            field.row.fieldHex.addTextChangedListener(SimpleWatcher { updateSwatchAndPreview(field) })
+            field.row.fieldHex.addTextChangedListener(SimpleWatcher {
+                if (!isBinding) updateSwatchAndPreview(field)
+            })
             field.row.fieldSwatch.setOnClickListener { field.row.fieldHex.requestFocus() }
+        }
+
+        presets.forEach { (name, preset) ->
+            val btn = com.google.android.material.button.MaterialButton(
+                this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle
+            ).apply {
+                text = name
+                textSize = 12f
+                insetTop = 0
+                insetBottom = 0
+                val margin = ThemeUtils.dp(context, 4f)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    ThemeUtils.dp(context, 38f)
+                ).apply { setMargins(margin, 0, margin, 0) }
+                setOnClickListener { bindFields(preset) }
+            }
+            binding.presetContainer.addView(btn)
         }
 
         val theme = ThemeConfig.load(this)
         bindFields(theme)
 
-        presets.forEach { (name, preset) ->
-            val btn = com.google.android.material.button.MaterialButton(this)
-            btn.text = name
-            btn.setOnClickListener { bindFields(preset) }
-            binding.presetContainer.addView(btn)
-        }
-
-        binding.seekCorner.progress = theme.cornerRadiusDp.toInt()
-        binding.seekFontScale.progress = ((theme.fontScale - 0.7f) * 100).toInt().coerceIn(0, 100)
-        binding.switchHaptic.isChecked = theme.hapticFeedbackEnabled
-        updateSliderLabels()
-
         binding.seekCorner.setOnSeekBarChangeListener(object : SimpleSeekBarListener() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 updateSliderLabels()
-                refreshPreview()
+                if (!isBinding) refreshPreview()
             }
         })
         binding.seekFontScale.setOnSeekBarChangeListener(object : SimpleSeekBarListener() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 updateSliderLabels()
-                refreshPreview()
+                if (!isBinding) refreshPreview()
             }
         })
 
@@ -106,8 +108,6 @@ class ThemeSettingsActivity : AppCompatActivity() {
             bindFields(ThemeConfig())
             Toast.makeText(this, "既定のテーマに戻しました", Toast.LENGTH_SHORT).show()
         }
-
-        refreshPreview()
     }
 
     private fun updateSliderLabels() {
@@ -117,13 +117,18 @@ class ThemeSettingsActivity : AppCompatActivity() {
     }
 
     private fun bindFields(theme: ThemeConfig) {
+        isBinding = true
         colorFields.forEach { field ->
-            field.row.fieldHex.setText(hex(field.get(theme)))
+            val hexVal = hex(field.get(theme))
+            field.row.fieldHex.setText(hexVal)
+            val color = parseColorSafe(hexVal, Color.GRAY)
+            field.row.fieldSwatch.background = ThemeUtils.roundedDrawable(color, 6f, this)
         }
         binding.seekCorner.progress = theme.cornerRadiusDp.toInt()
         binding.seekFontScale.progress = ((theme.fontScale - 0.7f) * 100).toInt().coerceIn(0, 100)
         binding.switchHaptic.isChecked = theme.hapticFeedbackEnabled
         updateSliderLabels()
+        isBinding = false
         refreshPreview()
     }
 
@@ -148,7 +153,6 @@ class ThemeSettingsActivity : AppCompatActivity() {
         )
     }
 
-    /** 現在フォームに入力されている値でミニプレビューを即時再描画する。 */
     private fun refreshPreview() {
         val theme = currentThemeFromFields()
 
@@ -194,14 +198,12 @@ class ThemeSettingsActivity : AppCompatActivity() {
         finish()
     }
 
-    /** onTextChangedのみ使う簡易TextWatcher。 */
     private class SimpleWatcher(private val onChanged: () -> Unit) : TextWatcher {
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { onChanged() }
         override fun afterTextChanged(s: Editable?) {}
     }
 
-    /** onProgressChangedのみ使う簡易SeekBarリスナー。 */
     private open class SimpleSeekBarListener : SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {}
         override fun onStartTrackingTouch(seekBar: SeekBar?) {}

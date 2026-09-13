@@ -33,8 +33,8 @@ android {
         applicationId = "dev.clipkeyboard"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.1.1"
+        versionCode = 5
+        versionName = "1.1.3"
     }
 
     signingConfigs {
