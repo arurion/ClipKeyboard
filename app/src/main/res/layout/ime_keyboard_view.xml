@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ルートをFrameLayoutにし、クラッシュするBottomSheetDialogの代わりに安全なオーバーレイを同居させる -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/ime_root"
     android:layout_width="match_parent"
     android:layout_height="244dp">
 
-    <!-- 通常のキーボードコンテンツ -->
     <LinearLayout
         android:id="@+id/ime_content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ヘッダー：親指で確実に押せる44dpの機能的追従バー -->
         <LinearLayout
             android:id="@+id/ime_header"
             android:layout_width="match_parent"
@@ -29,7 +25,7 @@
                 android:contentDescription="前のキーボードに戻る"
                 android:padding="10dp"
                 android:src="@drawable/ic_language_24"
-                app:tint="#0369A1" />
+                android:tint="#0369A1" />
 
             <TextView
                 android:id="@+id/text_ime_title"
@@ -58,7 +54,7 @@
                 android:contentDescription="定型文を作成"
                 android:padding="10dp"
                 android:src="@drawable/ic_add_24"
-                app:tint="#475569" />
+                android:tint="#475569" />
 
             <ImageButton
                 android:id="@+id/btn_close_keyboard"
@@ -68,10 +64,9 @@
                 android:contentDescription="キーボードを閉じる"
                 android:padding="10dp"
                 android:src="@drawable/ic_keyboard_hide_24"
-                app:tint="#475569" />
+                android:tint="#475569" />
         </LinearLayout>
 
-        <!-- 面と影の境界 -->
         <View
             android:id="@+id/header_shadow"
             android:layout_width="match_parent"
@@ -99,7 +94,6 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- ★安全なクイックアクション・オーバーレイ（ダイアログを使わないため100%クラッシュしない） -->
     <LinearLayout
         android:id="@+id/overlay_quick_actions"
         android:layout_width="match_parent"
@@ -147,7 +141,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_push_pin_16"
-                    app:tint="#0369A1" />
+                    android:tint="#0369A1" />
                 <TextView
                     android:id="@+id/action_pin_label"
                     android:layout_width="wrap_content"
@@ -166,10 +160,11 @@
                 android:gravity="center_vertical"
                 android:paddingHorizontal="10dp">
                 <ImageView
+                    android:id="@+id/action_edit_icon"
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_edit_24"
-                    app:tint="#475569" />
+                    android:tint="#475569" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -191,7 +186,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_delete_24"
-                    app:tint="#E11D48" />
+                    android:tint="#E11D48" />
                 <TextView
                     android:id="@+id/action_delete_label"
                     android:layout_width="wrap_content"
@@ -203,5 +198,4 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
 </FrameLayout>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#EAF5FF"
@@ -60,7 +59,6 @@
             android:textStyle="bold"
             android:layout_marginBottom="6dp"/>
 
-        <!-- 画面外はみ出し防止の HorizontalScrollView -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -113,7 +111,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#0369A1"
-                android:text="4 dp" />
+                android:text="6 dp" />
         </LinearLayout>
         <SeekBar android:id="@+id/seek_corner" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="24"/>
 
@@ -135,7 +133,7 @@
                 android:textColor="#0369A1"
                 android:text="100 %" />
         </LinearLayout>
-        <SeekBar android:id="@+id/seek_font_scale" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100"/>
+        <SeekBar android:id="@+id/seek_font_scale" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="70"/>
 
         <LinearLayout
             android:layout_width="match_parent"

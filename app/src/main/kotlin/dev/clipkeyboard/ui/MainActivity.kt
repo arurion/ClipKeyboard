@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import dev.clipkeyboard.data.ClipItem
 import dev.clipkeyboard.data.ClipStore
+import dev.clipkeyboard.data.ClipboardWatcher
 import dev.clipkeyboard.databinding.ActivityMainBinding
 import dev.clipkeyboard.ime.ClipAdapter
 import dev.clipkeyboard.theme.ThemeConfig
@@ -43,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        ClipboardWatcher.register(this)
+
         val theme = ThemeConfig.load(this)
         adapter = ClipAdapter(
             items = emptyList(),
@@ -53,12 +56,10 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerClips.layoutManager = LinearLayoutManager(this)
         binding.recyclerClips.adapter = adapter
 
-        // ① 有効化設定
         binding.btnEnableIme.setOnClickListener {
             startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
         }
 
-        // ② 切替ダイアログ
         binding.btnPickIme.setOnClickListener {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showInputMethodPicker()

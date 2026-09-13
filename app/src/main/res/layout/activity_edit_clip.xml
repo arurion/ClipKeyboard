@@ -6,7 +6,6 @@
     android:background="#EAF5FF"
     android:orientation="vertical">
 
-    <!-- ツールバー：保存ボタンを右上に固定してキーボード被りを防ぐ -->
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -22,7 +21,7 @@
             android:contentDescription="戻る"
             android:padding="10dp"
             android:src="@drawable/ic_close_24"
-            app:tint="#0F172A" />
+            android:tint="#0F172A" />
 
         <TextView
             android:id="@+id/toolbar_title"
@@ -44,7 +43,7 @@
             android:padding="10dp"
             android:src="@drawable/ic_delete_24"
             android:visibility="gone"
-            app:tint="#E11D48" />
+            android:tint="#E11D48" />
 
         <ImageButton
             android:id="@+id/btn_save"
@@ -54,7 +53,7 @@
             android:contentDescription="保存"
             android:padding="10dp"
             android:src="@drawable/ic_check_24"
-            app:tint="#0369A1" />
+            android:tint="#0369A1" />
     </LinearLayout>
 
     <ScrollView

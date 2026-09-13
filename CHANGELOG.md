@@ -3,6 +3,36 @@
 このプロジェクトの変更点は [Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)
 の形式に沿って記録する。
 
+## [1.1.4] - 2026-09-13
+
+### 修正
+- **IMEの`InflateException`を根絶する目的で`ContextThemeWrapper`を導入。**
+  `InputMethodService`(`this`)のデフォルトコンテキストでは、端末・OSバージョンに
+  よっては`?attr/selectableItemBackgroundBorderless`のようなMaterialComponents/
+  AppCompat由来の属性が解決できず`InflateException`を起こす場合があった。
+  `ContextThemeWrapper(this, R.style.Theme_ClipKeyboard)`で明示的にアプリの
+  テーマを適用したコンテキストからinflateするよう変更し、属性解決を安定させた。
+- **Android 7.0〜8.1 (API 24〜27) でのキーボード切替に対応。**
+  `InputMethodService#switchToNextInputMethod(boolean)`の簡易メソッドが
+  期待通り動かない可能性のある古いAPIレベルでは、ウィンドウToken経由の
+  `InputMethodManager#switchToNextInputMethod(token, boolean)`にフォールバック
+  するようにした。最終手段として`showInputMethodPicker()`を呼ぶ3段構成は維持。
+- **キーボードを一度も開かなくても、アプリ単体でクリップボード監視を開始するように。**
+  `MainActivity#onCreate`でも`ClipboardWatcher.register(this)`を呼ぶようにし、
+  「IMEを起動するまで監視が始まらない」という抜け漏れを解消した。
+- **文字サイズスライダーの表示と実際の倍率のズレを解消。**
+  スライダーの範囲を70%〜140%に整理し、表示ラベルの`(70 + progress)%`と
+  内部の`fontScale = (70 + progress) / 100f`を完全に1対1で対応させた。
+- **カラーコード編集中のチラつきを解消。**
+  途中まで打ちかけの16進コードがパースに失敗した際、以前はプレビューが
+  グレーなどのフォールバック色に瞬間的に切り替わっていた。各カラー欄が
+  「直前の有効な色」を保持するよう`ColorField`を変更し、無効な入力中は
+  プレビューを変化させないようにした。
+
+### 変更
+- 設定アイコンを鉛筆(✎)から歯車(⚙ `ic_settings_24`)に変更。
+- すべてのアイコンの色指定を`app:tint`から標準の`android:tint`に統一。
+
 ## [1.1.3] - 2026-09-12
 
 UI仕様書「Tinted Glass UI Philosophy」の指示に厳格に従い、以下を全面的に修正した。

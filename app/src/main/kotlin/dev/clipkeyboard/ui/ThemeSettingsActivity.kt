@@ -21,7 +21,13 @@ class ThemeSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityThemeSettingsBinding
     private lateinit var preview: PreviewKeyboardMockBinding
 
-    private data class ColorField(val row: RowColorFieldBinding, val label: String, val get: (ThemeConfig) -> Int)
+    private class ColorField(
+        val row: RowColorFieldBinding,
+        val label: String,
+        var currentColor: Int,
+        val get: (ThemeConfig) -> Int
+    )
+
     private lateinit var colorFields: List<ColorField>
     private var isBinding = false
 
@@ -52,14 +58,17 @@ class ThemeSettingsActivity : AppCompatActivity() {
 
         preview = PreviewKeyboardMockBinding.inflate(LayoutInflater.from(this), binding.previewContainer, true)
 
+        val initialTheme = ThemeConfig.load(this)
+
         colorFields = listOf(
-            ColorField(binding.rowBg, "背景色") { it.backgroundColor },
-            ColorField(binding.rowRowBg, "行の背景色") { it.rowBackgroundColor },
-            ColorField(binding.rowText, "文字色") { it.textColor },
-            ColorField(binding.rowSubText, "補助文字色") { it.subTextColor },
-            ColorField(binding.rowAccent, "アクセント色") { it.accentColor },
-            ColorField(binding.rowDanger, "警告色") { it.dangerColor }
+            ColorField(binding.rowBg, "背景色", initialTheme.backgroundColor) { it.backgroundColor },
+            ColorField(binding.rowRowBg, "行の背景色", initialTheme.rowBackgroundColor) { it.rowBackgroundColor },
+            ColorField(binding.rowText, "文字色", initialTheme.textColor) { it.textColor },
+            ColorField(binding.rowSubText, "補助文字色", initialTheme.subTextColor) { it.subTextColor },
+            ColorField(binding.rowAccent, "アクセント色", initialTheme.accentColor) { it.accentColor },
+            ColorField(binding.rowDanger, "警告色", initialTheme.dangerColor) { it.dangerColor }
         )
+
         colorFields.forEach { field ->
             field.row.fieldLabel.text = field.label
             field.row.fieldHex.addTextChangedListener(SimpleWatcher {
@@ -86,8 +95,8 @@ class ThemeSettingsActivity : AppCompatActivity() {
             binding.presetContainer.addView(btn)
         }
 
-        val theme = ThemeConfig.load(this)
-        bindFields(theme)
+        binding.seekFontScale.max = 70
+        bindFields(initialTheme)
 
         binding.seekCorner.setOnSeekBarChangeListener(object : SimpleSeekBarListener() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -112,20 +121,21 @@ class ThemeSettingsActivity : AppCompatActivity() {
 
     private fun updateSliderLabels() {
         binding.labelCornerValue.text = "${binding.seekCorner.progress} dp"
-        val percent = 70 + binding.seekFontScale.progress * 30 / 100
+        val percent = 70 + binding.seekFontScale.progress
         binding.labelFontValue.text = "$percent %"
     }
 
     private fun bindFields(theme: ThemeConfig) {
         isBinding = true
         colorFields.forEach { field ->
-            val hexVal = hex(field.get(theme))
+            val color = field.get(theme)
+            field.currentColor = color
+            val hexVal = hex(color)
             field.row.fieldHex.setText(hexVal)
-            val color = parseColorSafe(hexVal, Color.GRAY)
             field.row.fieldSwatch.background = ThemeUtils.roundedDrawable(color, 6f, this)
         }
-        binding.seekCorner.progress = theme.cornerRadiusDp.toInt()
-        binding.seekFontScale.progress = ((theme.fontScale - 0.7f) * 100).toInt().coerceIn(0, 100)
+        binding.seekCorner.progress = theme.cornerRadiusDp.toInt().coerceIn(0, binding.seekCorner.max)
+        binding.seekFontScale.progress = ((theme.fontScale * 100).toInt() - 70).coerceIn(0, binding.seekFontScale.max)
         binding.switchHaptic.isChecked = theme.hapticFeedbackEnabled
         updateSliderLabels()
         isBinding = false
@@ -133,22 +143,26 @@ class ThemeSettingsActivity : AppCompatActivity() {
     }
 
     private fun updateSwatchAndPreview(field: ColorField) {
-        val color = parseColorSafe(field.row.fieldHex.text.toString(), Color.GRAY)
-        field.row.fieldSwatch.background = ThemeUtils.roundedDrawable(color, 6f, this)
+        val text = field.row.fieldHex.text.toString()
+        try {
+            val parsed = Color.parseColor(text)
+            field.currentColor = parsed
+            field.row.fieldSwatch.background = ThemeUtils.roundedDrawable(parsed, 6f, this)
+        } catch (_: Exception) {
+        }
         refreshPreview()
     }
 
     private fun currentThemeFromFields(): ThemeConfig {
-        val default = ThemeConfig()
         return ThemeConfig(
-            backgroundColor = parseColorSafe(binding.rowBg.fieldHex.text.toString(), default.backgroundColor),
-            rowBackgroundColor = parseColorSafe(binding.rowRowBg.fieldHex.text.toString(), default.rowBackgroundColor),
-            textColor = parseColorSafe(binding.rowText.fieldHex.text.toString(), default.textColor),
-            subTextColor = parseColorSafe(binding.rowSubText.fieldHex.text.toString(), default.subTextColor),
-            accentColor = parseColorSafe(binding.rowAccent.fieldHex.text.toString(), default.accentColor),
-            dangerColor = parseColorSafe(binding.rowDanger.fieldHex.text.toString(), default.dangerColor),
+            backgroundColor = colorFields[0].currentColor,
+            rowBackgroundColor = colorFields[1].currentColor,
+            textColor = colorFields[2].currentColor,
+            subTextColor = colorFields[3].currentColor,
+            accentColor = colorFields[4].currentColor,
+            dangerColor = colorFields[5].currentColor,
             cornerRadiusDp = binding.seekCorner.progress.toFloat(),
-            fontScale = 0.7f + binding.seekFontScale.progress / 100f,
+            fontScale = (70 + binding.seekFontScale.progress) / 100f,
             hapticFeedbackEnabled = binding.switchHaptic.isChecked
         )
     }
@@ -188,9 +202,6 @@ class ThemeSettingsActivity : AppCompatActivity() {
     }
 
     private fun hex(color: Int) = String.format("#%06X", 0xFFFFFF and color)
-
-    private fun parseColorSafe(text: String, fallback: Int): Int =
-        try { Color.parseColor(text) } catch (_: Exception) { fallback }
 
     private fun saveAndFinish() {
         ThemeConfig.save(this, currentThemeFromFields())

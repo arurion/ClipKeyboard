@@ -34,6 +34,8 @@ class ClipboardIMEService : InputMethodService() {
     private lateinit var overlayPreviewText: TextView
     private lateinit var overlayPinLabel: TextView
     private lateinit var overlayPinIcon: ImageView
+    private lateinit var overlayEditIcon: ImageView
+    private lateinit var overlayDeleteIcon: ImageView
 
     private val storeListener = { refreshList() }
 
@@ -51,8 +53,13 @@ class ClipboardIMEService : InputMethodService() {
     override fun onEvaluateFullscreenMode(): Boolean = false
 
     override fun onCreateInputView(): View {
-        theme = ThemeConfig.load(this)
-        val root = LayoutInflater.from(this).inflate(R.layout.ime_keyboard_view, null) as FrameLayout
+        // 「?attr/selectableItemBackgroundBorderless」等がServiceのデフォルトコンテキストでは
+        // 解決できず InflateException を起こすことがあるため、明示的にアプリのテーマで
+        // ラップしたコンテキストからinflateする。
+        val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_ClipKeyboard)
+        theme = ThemeConfig.load(themedContext)
+
+        val root = LayoutInflater.from(themedContext).inflate(R.layout.ime_keyboard_view, null) as FrameLayout
 
         val contentContainer = root.findViewById<LinearLayout>(R.id.ime_content_container)
         val header = root.findViewById<LinearLayout>(R.id.ime_header)
@@ -65,13 +72,13 @@ class ClipboardIMEService : InputMethodService() {
         emptyText = root.findViewById(R.id.text_empty)
         recycler = root.findViewById(R.id.recycler_clips)
 
-        // オーバーレイ参照
         quickActionsOverlay = root.findViewById(R.id.overlay_quick_actions)
         overlayPreviewText = root.findViewById(R.id.overlay_preview_text)
         overlayPinLabel = root.findViewById(R.id.action_pin_label)
         overlayPinIcon = root.findViewById(R.id.action_pin_icon)
+        overlayEditIcon = root.findViewById(R.id.action_edit_icon)
+        overlayDeleteIcon = root.findViewById(R.id.action_delete_icon)
 
-        // 背景とテーマ適用
         contentContainer.setBackgroundColor(theme.backgroundColor)
         header.setBackgroundColor(ThemeUtils.headerBackgroundColor(theme))
         headerShadow.background = ThemeUtils.headerShadowDrawable()
@@ -82,17 +89,18 @@ class ClipboardIMEService : InputMethodService() {
         addBtn.setColorFilter(theme.subTextColor)
         closeBtn.setColorFilter(theme.subTextColor)
 
-        // 操作リスナー
+        overlayEditIcon.setColorFilter(theme.subTextColor)
+        overlayDeleteIcon.setColorFilter(theme.dangerColor)
+
         switchBtn.setOnClickListener { handleSwitchToPreviousIme() }
         addBtn.setOnClickListener { openCreateInHostApp() }
         closeBtn.setOnClickListener { requestHideSelf(0) }
 
-        // 背景タップでオーバーレイを閉じる
         quickActionsOverlay.setOnClickListener {
             quickActionsOverlay.visibility = View.GONE
         }
 
-        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.layoutManager = LinearLayoutManager(themedContext)
         adapter = ClipAdapter(
             items = emptyList(),
             theme = theme,
@@ -151,19 +159,32 @@ class ClipboardIMEService : InputMethodService() {
         quickActionsOverlay.visibility = View.VISIBLE
     }
 
+    /**
+     * 直前のIME(Gboard/Simeji等)への復帰アクション。
+     * API 28+ は switchToPreviousInputMethod()/switchToNextInputMethod(false) の
+     * 便利メソッドを使い、それ未満(Android 7.0〜8.1)ではウィンドウToken経由の
+     * InputMethodManager#switchToNextInputMethod(token, boolean) にフォールバックする。
+     * すべて失敗した場合は最終手段としてOS標準のピッカーを開く。
+     */
     private fun handleSwitchToPreviousIme() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         var success = false
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             success = try { switchToPreviousInputMethod() } catch (_: Exception) { false }
+            if (!success) {
+                success = try { switchToNextInputMethod(false) } catch (_: Exception) { false }
+            }
+        } else {
+            val token = window?.window?.attributes?.token
+            if (token != null) {
+                success = try {
+                    imm.switchToNextInputMethod(token, false)
+                } catch (_: Exception) { false }
+            }
         }
 
         if (!success) {
-            success = try { switchToNextInputMethod(false) } catch (_: Exception) { false }
-        }
-
-        if (!success) {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showInputMethodPicker()
         }
     }
@@ -187,6 +208,10 @@ class ClipboardIMEService : InputMethodService() {
         super.onStartInputView(info, restarting)
         if (::quickActionsOverlay.isInitialized) {
             quickActionsOverlay.visibility = View.GONE
+        }
+        if (::adapter.isInitialized) {
+            theme = ThemeConfig.load(this)
+            adapter.updateThemeAndItems(theme, ClipStore.getAll(this))
         }
         refreshList()
     }
