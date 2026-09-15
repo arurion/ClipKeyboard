@@ -10,6 +10,28 @@
     android:paddingHorizontal="12dp"
     android:paddingVertical="10dp">
 
+    <!-- 画像サムネイル -->
+    <ImageView
+        android:id="@+id/img_thumbnail"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="10dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <!-- ファイル拡張子バッジ（ZIP, PDF等） -->
+    <TextView
+        android:id="@+id/badge_file_ext"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/bg_control_dock"
+        android:gravity="center"
+        android:textColor="#0369A1"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
     <ImageView
         android:id="@+id/img_pin_indicator"
         android:layout_width="18dp"
@@ -47,12 +69,28 @@
             android:textSize="14sp" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/text_time"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:textColor="#94A3B8"
-        android:textSize="11sp" />
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/text_char_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#0369A1"
+            android:textSize="10sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="#94A3B8"
+            android:textSize="11sp" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -2,13 +2,9 @@ package dev.clipkeyboard.data
 
 import android.content.Context
 import org.json.JSONArray
+import java.io.File
 import java.util.UUID
 
-/**
- * クリップ履歴の永続化レイヤ。
- * Room 等を使わず SharedPreferences 内に JSON 配列としてまとめて保存する軽量実装。
- * (キーボード用途では件数が数百程度に収まる想定なので十分実用的)
- */
 object ClipStore {
     private const val PREFS = "clipkeyboard_store"
     private const val KEY_ITEMS = "items"
@@ -30,7 +26,6 @@ object ClipStore {
         for (i in 0 until arr.length()) {
             list.add(ClipItem.fromJson(arr.getJSONObject(i)))
         }
-        // ピン留めを先頭に、その後は新しい順
         return list.sortedWith(compareByDescending<ClipItem> { it.pinned }.thenByDescending { it.updatedAt })
     }
 
@@ -41,11 +36,10 @@ object ClipStore {
         notifyChanged()
     }
 
-    /** システムクリップボード等から新規追加。同一テキストが既にあれば更新日時だけ上げて重複を避ける。 */
-    fun addOrTouch(context: Context, text: String, label: String? = null): ClipItem {
+    fun addOrTouchText(context: Context, text: String, label: String? = null): ClipItem {
         val now = System.currentTimeMillis()
         val current = getAll(context).toMutableList()
-        val existing = current.firstOrNull { it.text == text }
+        val existing = current.firstOrNull { it.mimeType == "text/plain" && it.text == text }
         if (existing != null) {
             existing.updatedAt = now
             if (label != null) existing.label = label
@@ -54,31 +48,47 @@ object ClipStore {
         }
         val item = ClipItem(
             id = UUID.randomUUID().toString(),
+            mimeType = "text/plain",
             text = text,
             label = label,
             createdAt = now,
             updatedAt = now
         )
         current.add(0, item)
-        // 上限を超えたらピン留めされていない古いものから削除
-        val trimmed = if (current.size > MAX_ITEMS) {
-            val pinned = current.filter { it.pinned }
-            val unpinned = current.filter { !it.pinned }.sortedByDescending { it.updatedAt }
-            pinned + unpinned.take(MAX_ITEMS - pinned.size)
-        } else current
-        saveAll(context, trimmed)
+        trimAndSave(context, current)
         return item
     }
 
-    /**
-     * メイン画面の「＋」やキーボードの「定型文を作成」から呼ばれる明示的な新規作成。
-     * addOrTouch と異なり同一テキストとの統合(重複排除)を行わない
-     * — ユーザーが意図して複数の定型文を作る操作のため。
-     */
+    fun addImageOrFile(
+        context: Context,
+        mimeType: String,
+        filePath: String,
+        fileName: String?,
+        fileSize: Long,
+        label: String? = null
+    ): ClipItem {
+        val now = System.currentTimeMillis()
+        val current = getAll(context).toMutableList()
+        val item = ClipItem(
+            id = UUID.randomUUID().toString(),
+            mimeType = mimeType,
+            filePath = filePath,
+            fileName = fileName,
+            fileSize = fileSize,
+            label = label,
+            createdAt = now,
+            updatedAt = now
+        )
+        current.add(0, item)
+        trimAndSave(context, current)
+        return item
+    }
+
     fun createManual(context: Context, text: String, label: String? = null, pinned: Boolean = false): ClipItem {
         val now = System.currentTimeMillis()
         val item = ClipItem(
             id = UUID.randomUUID().toString(),
+            mimeType = "text/plain",
             text = text,
             label = label,
             pinned = pinned,
@@ -102,7 +112,12 @@ object ClipStore {
     }
 
     fun delete(context: Context, id: String) {
-        val current = getAll(context).filterNot { it.id == id }
+        val current = getAll(context).toMutableList()
+        val item = current.firstOrNull { it.id == id }
+        if (item?.filePath != null) {
+            try { File(item.filePath!!).delete() } catch (_: Exception) {}
+        }
+        current.removeAll { it.id == id }
         saveAll(context, current)
     }
 
@@ -116,7 +131,28 @@ object ClipStore {
     }
 
     fun clearAllUnpinned(context: Context) {
-        val current = getAll(context).filter { it.pinned }
-        saveAll(context, current)
+        val current = getAll(context)
+        val unpinned = current.filter { !it.pinned }
+        unpinned.forEach { item ->
+            if (item.filePath != null) {
+                try { File(item.filePath!!).delete() } catch (_: Exception) {}
+            }
+        }
+        saveAll(context, current.filter { it.pinned })
+    }
+
+    private fun trimAndSave(context: Context, list: MutableList<ClipItem>) {
+        val trimmed = if (list.size > MAX_ITEMS) {
+            val pinned = list.filter { it.pinned }
+            val unpinned = list.filter { !it.pinned }.sortedByDescending { it.updatedAt }
+            val toRemove = unpinned.drop(MAX_ITEMS - pinned.size)
+            toRemove.forEach { item ->
+                if (item.filePath != null) {
+                    try { File(item.filePath!!).delete() } catch (_: Exception) {}
+                }
+            }
+            pinned + unpinned.take(MAX_ITEMS - pinned.size)
+        } else list
+        saveAll(context, trimmed)
     }
 }

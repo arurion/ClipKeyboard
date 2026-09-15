@@ -53,15 +53,17 @@ class ClipboardIMEService : InputMethodService() {
     override fun onEvaluateFullscreenMode(): Boolean = false
 
     override fun onCreateInputView(): View {
-        // 「?attr/selectableItemBackgroundBorderless」等がServiceのデフォルトコンテキストでは
-        // 解決できず InflateException を起こすことがあるため、明示的にアプリのテーマで
-        // ラップしたコンテキストからinflateする。
         val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_ClipKeyboard)
         theme = ThemeConfig.load(themedContext)
 
         val root = LayoutInflater.from(themedContext).inflate(R.layout.ime_keyboard_view, null) as FrameLayout
 
         val contentContainer = root.findViewById<LinearLayout>(R.id.ime_content_container)
+        contentContainer.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            ThemeUtils.dp(themedContext, 240f)
+        )
+
         val header = root.findViewById<LinearLayout>(R.id.ime_header)
         val headerShadow = root.findViewById<View>(R.id.header_shadow)
         val switchBtn = root.findViewById<ImageButton>(R.id.btn_switch_ime)
@@ -71,6 +73,16 @@ class ClipboardIMEService : InputMethodService() {
         countText = root.findViewById(R.id.text_count)
         emptyText = root.findViewById(R.id.text_empty)
         recycler = root.findViewById(R.id.recycler_clips)
+
+        val editBar = root.findViewById<LinearLayout>(R.id.ime_edit_bar)
+        val btnUndo = root.findViewById<ImageButton>(R.id.btn_undo)
+        val btnRedo = root.findViewById<ImageButton>(R.id.btn_redo)
+        val btnLeft = root.findViewById<ImageButton>(R.id.btn_dpad_left)
+        val btnUp = root.findViewById<ImageButton>(R.id.btn_dpad_up)
+        val btnDown = root.findViewById<ImageButton>(R.id.btn_dpad_down)
+        val btnRight = root.findViewById<ImageButton>(R.id.btn_dpad_right)
+        val btnBackspace = root.findViewById<ImageButton>(R.id.btn_backspace)
+        val btnEnter = root.findViewById<ImageButton>(R.id.btn_enter)
 
         quickActionsOverlay = root.findViewById(R.id.overlay_quick_actions)
         overlayPreviewText = root.findViewById(R.id.overlay_preview_text)
@@ -82,12 +94,24 @@ class ClipboardIMEService : InputMethodService() {
         contentContainer.setBackgroundColor(theme.backgroundColor)
         header.setBackgroundColor(ThemeUtils.headerBackgroundColor(theme))
         headerShadow.background = ThemeUtils.headerShadowDrawable()
+        editBar.setBackgroundColor(ThemeUtils.headerBackgroundColor(theme))
+
         titleText.setTextColor(theme.textColor)
         countText.setTextColor(theme.subTextColor)
         emptyText.setTextColor(theme.subTextColor)
+
         switchBtn.setColorFilter(theme.accentColor)
         addBtn.setColorFilter(theme.subTextColor)
         closeBtn.setColorFilter(theme.subTextColor)
+
+        btnUndo.setColorFilter(theme.subTextColor)
+        btnRedo.setColorFilter(theme.subTextColor)
+        btnLeft.setColorFilter(theme.textColor)
+        btnUp.setColorFilter(theme.textColor)
+        btnDown.setColorFilter(theme.textColor)
+        btnRight.setColorFilter(theme.textColor)
+        btnBackspace.setColorFilter(theme.dangerColor)
+        btnEnter.setColorFilter(theme.accentColor)
 
         overlayEditIcon.setColorFilter(theme.subTextColor)
         overlayDeleteIcon.setColorFilter(theme.dangerColor)
@@ -95,6 +119,15 @@ class ClipboardIMEService : InputMethodService() {
         switchBtn.setOnClickListener { handleSwitchToPreviousIme() }
         addBtn.setOnClickListener { openCreateInHostApp() }
         closeBtn.setOnClickListener { requestHideSelf(0) }
+
+        btnUndo.setOnClickListener { triggerEditAction { performUndo() } }
+        btnRedo.setOnClickListener { triggerEditAction { performRedo() } }
+        btnLeft.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_LEFT) } }
+        btnUp.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_UP) } }
+        btnDown.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_DOWN) } }
+        btnRight.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_RIGHT) } }
+        btnBackspace.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL) } }
+        btnEnter.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_ENTER) } }
 
         quickActionsOverlay.setOnClickListener {
             quickActionsOverlay.visibility = View.GONE
@@ -128,16 +161,104 @@ class ClipboardIMEService : InputMethodService() {
         recycler.visibility = if (all.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    private fun commitClip(item: ClipItem) {
-        currentInputConnection?.commitText(item.text, 1)
+    private inline fun triggerEditAction(action: () -> Unit) {
+        if (theme.hapticFeedbackEnabled) {
+            val root = window?.window?.decorView
+            root?.performHapticFeedback(
+                android.view.HapticFeedbackConstants.KEYBOARD_TAP,
+                android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+            )
+        }
+        action()
     }
 
-    /**
-     * 長押し時にダイアログではなく、Viewオーバーレイで安全にクイックメニューを表示
-     * (Window Token不要で100%クラッシュしない)
-     */
+    private fun performUndo() {
+        val ic = currentInputConnection ?: return
+        val success = ic.performContextMenuAction(android.R.id.undo)
+        if (!success) {
+            sendCtrlKey(android.view.KeyEvent.KEYCODE_Z, false)
+        }
+    }
+
+    private fun performRedo() {
+        val ic = currentInputConnection ?: return
+        val success = ic.performContextMenuAction(android.R.id.redo)
+        if (!success) {
+            sendCtrlKey(android.view.KeyEvent.KEYCODE_Z, true)
+        }
+    }
+
+    private fun sendCtrlKey(keyCode: Int, shift: Boolean) {
+        val ic = currentInputConnection ?: return
+        val now = android.os.SystemClock.uptimeMillis()
+        val meta = android.view.KeyEvent.META_CTRL_ON or (if (shift) android.view.KeyEvent.META_SHIFT_ON else 0)
+        ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCode, 0, meta))
+        ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCode, 0, meta))
+    }
+
+    private fun commitClip(item: ClipItem) {
+        // テキストの場合
+        if (item.mimeType == "text/plain" || item.filePath == null) {
+            currentInputConnection?.commitText(item.text.orEmpty(), 1)
+            return
+        }
+
+        // 画像・ファイルの場合
+        val file = java.io.File(item.filePath!!)
+        if (!file.exists()) {
+            android.widget.Toast.makeText(this, "ファイルが見つかりません", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "$packageName.fileprovider",
+                file
+            )
+
+            val cm = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val clipData = android.content.ClipData(
+                item.label ?: item.fileName ?: "Clip",
+                arrayOf(item.mimeType),
+                android.content.ClipData.Item(contentUri)
+            )
+            cm.setPrimaryClip(clipData)
+
+            if (item.isImage) {
+                val editorInfo = currentInputEditorInfo
+                val inputConnection = currentInputConnection
+                if (editorInfo != null && inputConnection != null) {
+                    val supportedMimes = androidx.core.view.inputmethod.EditorInfoCompat.getContentMimeTypes(editorInfo)
+                    val canCommit = supportedMimes.any { it.startsWith("image/") || it == item.mimeType }
+
+                    if (canCommit) {
+                        val description = android.content.ClipDescription(item.fileName ?: "image", arrayOf(item.mimeType))
+                        val contentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
+                            contentUri,
+                            description,
+                            null
+                        )
+                        androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
+                            inputConnection,
+                            editorInfo,
+                            contentInfo,
+                            androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
+                            null
+                        )
+                        return
+                    }
+                }
+            }
+
+            android.widget.Toast.makeText(this, "クリップボードに復元しました(貼り付け可能です)", android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "送信に失敗しました: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun showQuickActionsOverlay(item: ClipItem) {
-        overlayPreviewText.text = item.text
+        overlayPreviewText.text = if (item.isImage) item.fileName ?: "画像" else item.text.orEmpty()
         overlayPinLabel.text = if (item.pinned) "ピン留めを解除する" else "ピン留めする"
         overlayPinIcon.setColorFilter(theme.accentColor)
 
@@ -159,13 +280,6 @@ class ClipboardIMEService : InputMethodService() {
         quickActionsOverlay.visibility = View.VISIBLE
     }
 
-    /**
-     * 直前のIME(Gboard/Simeji等)への復帰アクション。
-     * API 28+ は switchToPreviousInputMethod()/switchToNextInputMethod(false) の
-     * 便利メソッドを使い、それ未満(Android 7.0〜8.1)ではウィンドウToken経由の
-     * InputMethodManager#switchToNextInputMethod(token, boolean) にフォールバックする。
-     * すべて失敗した場合は最終手段としてOS標準のピッカーを開く。
-     */
     private fun handleSwitchToPreviousIme() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         var success = false
@@ -209,6 +323,10 @@ class ClipboardIMEService : InputMethodService() {
         if (::quickActionsOverlay.isInitialized) {
             quickActionsOverlay.visibility = View.GONE
         }
+
+        // キーボード起動時にOSクリップボードを即時同期（Gboardでコピーした内容も即反映）
+        ClipboardWatcher.syncPrimaryClip(this)
+
         if (::adapter.isInitialized) {
             theme = ThemeConfig.load(this)
             adapter.updateThemeAndItems(theme, ClipStore.getAll(this))

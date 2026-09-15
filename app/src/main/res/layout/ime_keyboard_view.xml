@@ -2,28 +2,29 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ime_root"
     android:layout_width="match_parent"
-    android:layout_height="244dp">
+    android:layout_height="240dp">
 
     <LinearLayout
         android:id="@+id/ime_content_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="240dp"
         android:orientation="vertical">
 
+        <!-- ヘッダー（40dp） -->
         <LinearLayout
             android:id="@+id/ime_header"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:gravity="center_vertical"
             android:paddingHorizontal="6dp">
 
             <ImageButton
                 android:id="@+id/btn_switch_ime"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="前のキーボードに戻る"
-                android:padding="10dp"
+                android:padding="9dp"
                 android:src="@drawable/ic_language_24"
                 android:tint="#0369A1" />
 
@@ -48,21 +49,21 @@
 
             <ImageButton
                 android:id="@+id/btn_quick_add"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="定型文を作成"
-                android:padding="10dp"
+                android:padding="9dp"
                 android:src="@drawable/ic_add_24"
                 android:tint="#475569" />
 
             <ImageButton
                 android:id="@+id/btn_close_keyboard"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="キーボードを閉じる"
-                android:padding="10dp"
+                android:padding="9dp"
                 android:src="@drawable/ic_keyboard_hide_24"
                 android:tint="#475569" />
         </LinearLayout>
@@ -72,6 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="2dp" />
 
+        <!-- クリップ一覧 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_clips"
             android:layout_width="match_parent"
@@ -79,7 +81,7 @@
             android:layout_weight="1"
             android:clipToPadding="false"
             android:overScrollMode="never"
-            android:paddingVertical="4dp" />
+            android:paddingVertical="2dp" />
 
         <TextView
             android:id="@+id/text_empty"
@@ -88,12 +90,129 @@
             android:layout_weight="1"
             android:gravity="center"
             android:padding="16dp"
-            android:text="コピーしたテキストがここに並びます。\n右上の「＋」から定型文も追加できます。"
+            android:text="コピーしたテキストや画像がここに並びます。\n右上の「＋」から定型文も追加できます。"
             android:textColor="#64748B"
             android:textSize="12sp"
             android:visibility="gone" />
+
+        <View
+            android:id="@+id/footer_shadow"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2064748B" />
+
+        <!-- エディットバー（36dp） -->
+        <LinearLayout
+            android:id="@+id/ime_edit_bar"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="4dp">
+
+            <ImageButton
+                android:id="@+id/btn_undo"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="元に戻す"
+                android:padding="7dp"
+                android:src="@drawable/ic_undo_24"
+                android:tint="#475569" />
+
+            <ImageButton
+                android:id="@+id/btn_redo"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="やり直す"
+                android:padding="7dp"
+                android:src="@drawable/ic_redo_24"
+                android:tint="#475569" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="16dp"
+                android:layout_marginHorizontal="2dp"
+                android:background="#2664748B" />
+
+            <ImageButton
+                android:id="@+id/btn_dpad_left"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="左へ移動"
+                android:padding="6dp"
+                android:src="@drawable/ic_arrow_left_24"
+                android:tint="#0F172A" />
+
+            <ImageButton
+                android:id="@+id/btn_dpad_up"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="上へ移動"
+                android:padding="6dp"
+                android:src="@drawable/ic_arrow_up_24"
+                android:tint="#0F172A" />
+
+            <ImageButton
+                android:id="@+id/btn_dpad_down"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="下へ移動"
+                android:padding="6dp"
+                android:src="@drawable/ic_arrow_down_24"
+                android:tint="#0F172A" />
+
+            <ImageButton
+                android:id="@+id/btn_dpad_right"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="右へ移動"
+                android:padding="6dp"
+                android:src="@drawable/ic_arrow_right_24"
+                android:tint="#0F172A" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="16dp"
+                android:layout_marginHorizontal="2dp"
+                android:background="#2664748B" />
+
+            <ImageButton
+                android:id="@+id/btn_backspace"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1.2"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="1文字削除"
+                android:padding="7dp"
+                android:src="@drawable/ic_backspace_24"
+                android:tint="#E11D48" />
+
+            <ImageButton
+                android:id="@+id/btn_enter"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1.2"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="改行"
+                android:padding="7dp"
+                android:src="@drawable/ic_keyboard_return_24"
+                android:tint="#0369A1" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- クイックアクション・オーバーレイ -->
     <LinearLayout
         android:id="@+id/overlay_quick_actions"
         android:layout_width="match_parent"

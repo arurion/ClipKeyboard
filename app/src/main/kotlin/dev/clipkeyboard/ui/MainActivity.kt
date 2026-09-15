@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import android.widget.PopupMenu
@@ -21,7 +22,10 @@ import dev.clipkeyboard.databinding.ActivityMainBinding
 import dev.clipkeyboard.ime.ClipAdapter
 import dev.clipkeyboard.theme.ThemeConfig
 import java.io.BufferedReader
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStreamReader
+import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
@@ -65,7 +69,8 @@ class MainActivity : AppCompatActivity() {
             imm.showInputMethodPicker()
         }
 
-        binding.btnImport.setOnClickListener { importLauncher.launch("text/*") }
+        // 全形式ファイルピッカー（*/*）を解放
+        binding.btnImport.setOnClickListener { importLauncher.launch("*/*") }
         binding.btnTheme.setOnClickListener {
             startActivity(Intent(this, ThemeSettingsActivity::class.java))
         }
@@ -77,12 +82,15 @@ class MainActivity : AppCompatActivity() {
         ClipStore.addListener(storeListener)
 
         if (intent?.getStringExtra(EXTRA_ACTION) == ACTION_IMPORT) {
-            importLauncher.launch("text/*")
+            importLauncher.launch("*/*")
         }
     }
 
     override fun onResume() {
         super.onResume()
+        // アプリ起動・復帰時にもOSクリップボードを即時同期
+        ClipboardWatcher.syncPrimaryClip(this)
+
         val currentTheme = ThemeConfig.load(this)
         adapter.updateThemeAndItems(currentTheme, ClipStore.getAll(this))
         updateImeStatusUi()
@@ -101,9 +109,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun copyToClipboard(item: ClipItem) {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText(item.label ?: "Clip", item.text)
+        if (item.filePath != null) {
+            val file = File(item.filePath!!)
+            if (file.exists()) {
+                val contentUri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+                val clip = ClipData(item.label ?: item.fileName ?: "Clip", arrayOf(item.mimeType), ClipData.Item(contentUri))
+                cm.setPrimaryClip(clip)
+                Toast.makeText(this, "クリップボードにコピーしました", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+        val clip = ClipData.newPlainText(item.label ?: "Clip", item.text.orEmpty())
         cm.setPrimaryClip(clip)
-        val preview = if (item.text.length > 20) item.text.take(20) + "…" else item.text
+        val preview = if (item.text.orEmpty().length > 20) item.text.orEmpty().take(20) + "…" else item.text.orEmpty()
         Toast.makeText(this, "コピーしました: $preview", Toast.LENGTH_SHORT).show()
     }
 
@@ -150,13 +168,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun importFile(uri: Uri) {
         try {
+            val fileName = queryDisplayName(uri) ?: "インポート_${System.currentTimeMillis()}"
+            val mimeType = contentResolver.getType(uri) ?: getMimeTypeFromExtension(fileName) ?: "application/octet-stream"
+
+            // 画像またはバイナリファイルの場合
+            if (mimeType.startsWith("image/") || (!mimeType.startsWith("text/") && mimeType != "application/json")) {
+                importBinaryOrImageFile(uri, fileName, mimeType)
+                return
+            }
+
+            // テキストファイルの場合
             contentResolver.openInputStream(uri)?.use { input ->
                 val content = BufferedReader(InputStreamReader(input)).readText()
                 if (content.isBlank()) {
                     Toast.makeText(this, "ファイルが空です", Toast.LENGTH_SHORT).show()
                     return
                 }
-                val fileName = queryDisplayName(uri) ?: "インポート"
                 val lines = content.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
                 if (lines.size > 1) {
@@ -182,10 +209,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun importBinaryOrImageFile(uri: Uri, fileName: String, mimeType: String) {
+        try {
+            val clipsDir = File(filesDir, "clips").apply { if (!exists()) mkdirs() }
+            val targetFile = File(clipsDir, "${UUID.randomUUID()}_$fileName")
+
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            if (targetFile.exists() && targetFile.length() > 0) {
+                ClipStore.addImageOrFile(
+                    context = this,
+                    mimeType = mimeType,
+                    filePath = targetFile.absolutePath,
+                    fileName = fileName,
+                    fileSize = targetFile.length(),
+                    label = if (mimeType.startsWith("image/")) "画像" else "ファイル"
+                )
+                val typeName = if (mimeType.startsWith("image/")) "画像" else "ファイル"
+                Toast.makeText(this, "${typeName}を取り込みました: $fileName", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "保存に失敗しました: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun getMimeTypeFromExtension(fileName: String): String? {
+        val ext = fileName.substringAfterLast('.', "").lowercase()
+        return android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
+    }
+
     private fun queryDisplayName(uri: Uri): String? {
         val cursor = contentResolver.query(uri, null, null, null, null)
         cursor?.use {
-            val idx = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            val idx = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             if (idx >= 0 && it.moveToFirst()) return it.getString(idx)
         }
         return null

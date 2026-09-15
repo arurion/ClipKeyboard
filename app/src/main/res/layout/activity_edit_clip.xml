@@ -56,6 +56,47 @@
             android:tint="#0369A1" />
     </LinearLayout>
 
+    <!-- 長文時(3,000字超)に自動表示されるページネーション操作バー -->
+    <LinearLayout
+        android:id="@+id/layout_pagination"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#CCD8ECFD"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/btn_prev_page"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="前のページ"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_left_24"
+            android:tint="#0369A1" />
+
+        <TextView
+            android:id="@+id/text_page_info"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#0F172A"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btn_next_page"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="次のページ"
+            android:padding="6dp"
+            android:src="@drawable/ic_arrow_right_24"
+            android:tint="#0369A1" />
+    </LinearLayout>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
