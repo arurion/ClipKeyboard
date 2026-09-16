@@ -29,6 +29,13 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # デフォルトは packages: 'tools platform-tools' だが、Google がSDKリポジトリから
+          # 廃止済みの legacy 'tools' パッケージを削除したため、それを含むデフォルト値のまま
+          # 実行すると `Warning: Failed to find package 'tools'` で失敗するようになった
+          # (2026-09-14頃から世界中のCIで発生している既知の破壊的変更)。
+          # tools 自体はこのプロジェクトで使っていないので明示的に外す。
+          packages: 'platform-tools'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
