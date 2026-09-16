@@ -10,6 +10,7 @@ data class ThemeConfig(
     val subTextColor: Int = Color.parseColor("#475569"),
     val accentColor: Int = Color.parseColor("#0369A1"),
     val dangerColor: Int = Color.parseColor("#E11D48"),
+    val keyboardHeightDp: Float = 260f,
     val cornerRadiusDp: Float = 6f,
     val fontScale: Float = 1.0f,
     val hapticFeedbackEnabled: Boolean = true
@@ -27,6 +28,7 @@ data class ThemeConfig(
                 subTextColor = p.getInt("sub_text", default.subTextColor),
                 accentColor = p.getInt("accent", default.accentColor),
                 dangerColor = p.getInt("danger", default.dangerColor),
+                keyboardHeightDp = p.getFloat("height", default.keyboardHeightDp),
                 cornerRadiusDp = p.getFloat("corner", default.cornerRadiusDp),
                 fontScale = p.getFloat("font_scale", default.fontScale),
                 hapticFeedbackEnabled = p.getBoolean("haptic", default.hapticFeedbackEnabled)
@@ -41,6 +43,7 @@ data class ThemeConfig(
                 .putInt("sub_text", theme.subTextColor)
                 .putInt("accent", theme.accentColor)
                 .putInt("danger", theme.dangerColor)
+                .putFloat("height", theme.keyboardHeightDp)
                 .putFloat("corner", theme.cornerRadiusDp)
                 .putFloat("font_scale", theme.fontScale)
                 .putBoolean("haptic", theme.hapticFeedbackEnabled)

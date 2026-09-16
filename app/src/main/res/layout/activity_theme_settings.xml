@@ -95,11 +95,32 @@
             android:textColor="#0F172A"
             android:textStyle="bold" />
 
+        <!-- キーボードの高さ設定スライダー (200..320dp) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginTop="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="キーボードの高さ"
+                android:textColor="#475569" />
+            <TextView
+                android:id="@+id/label_height_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#0369A1"
+                android:text="260 dp" />
+        </LinearLayout>
+        <SeekBar android:id="@+id/seek_height" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="120"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

@@ -4,8 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.os.Build
+import android.os.SystemClock
+import android.view.Gravity
+import android.view.KeyEvent
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
@@ -26,16 +32,27 @@ import dev.clipkeyboard.ui.EditClipActivity
 class ClipboardIMEService : InputMethodService() {
 
     private lateinit var theme: ThemeConfig
+    private lateinit var rootLayout: FrameLayout
+    private lateinit var contentContainer: LinearLayout
     private lateinit var recycler: RecyclerView
     private lateinit var adapter: ClipAdapter
     private lateinit var countText: TextView
     private lateinit var emptyText: TextView
+    private lateinit var btnToggleFloating: ImageButton
     private lateinit var quickActionsOverlay: LinearLayout
     private lateinit var overlayPreviewText: TextView
     private lateinit var overlayPinLabel: TextView
     private lateinit var overlayPinIcon: ImageView
     private lateinit var overlayEditIcon: ImageView
     private lateinit var overlayDeleteIcon: ImageView
+
+    private var isFloating = false
+    private var floatingX = 100
+    private var floatingY = 300
+    private var dragStartX = 0f
+    private var dragStartY = 0f
+    private var initialX = 0
+    private var initialY = 0
 
     private val storeListener = { refreshList() }
 
@@ -56,40 +73,36 @@ class ClipboardIMEService : InputMethodService() {
         val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_ClipKeyboard)
         theme = ThemeConfig.load(themedContext)
 
-        val root = LayoutInflater.from(themedContext).inflate(R.layout.ime_keyboard_view, null) as FrameLayout
+        rootLayout = LayoutInflater.from(themedContext).inflate(R.layout.ime_keyboard_view, null) as FrameLayout
+        contentContainer = rootLayout.findViewById(R.id.ime_content_container)
 
-        val contentContainer = root.findViewById<LinearLayout>(R.id.ime_content_container)
-        contentContainer.layoutParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            ThemeUtils.dp(themedContext, 240f)
-        )
+        val header = rootLayout.findViewById<LinearLayout>(R.id.ime_header)
+        val headerShadow = rootLayout.findViewById<View>(R.id.header_shadow)
+        val switchBtn = rootLayout.findViewById<ImageButton>(R.id.btn_switch_ime)
+        val titleText = rootLayout.findViewById<TextView>(R.id.text_ime_title)
+        btnToggleFloating = rootLayout.findViewById(R.id.btn_toggle_floating)
+        val addBtn = rootLayout.findViewById<ImageButton>(R.id.btn_quick_add)
+        val closeBtn = rootLayout.findViewById<ImageButton>(R.id.btn_close_keyboard)
+        countText = rootLayout.findViewById(R.id.text_count)
+        emptyText = rootLayout.findViewById(R.id.text_empty)
+        recycler = rootLayout.findViewById(R.id.recycler_clips)
 
-        val header = root.findViewById<LinearLayout>(R.id.ime_header)
-        val headerShadow = root.findViewById<View>(R.id.header_shadow)
-        val switchBtn = root.findViewById<ImageButton>(R.id.btn_switch_ime)
-        val titleText = root.findViewById<TextView>(R.id.text_ime_title)
-        val addBtn = root.findViewById<ImageButton>(R.id.btn_quick_add)
-        val closeBtn = root.findViewById<ImageButton>(R.id.btn_close_keyboard)
-        countText = root.findViewById(R.id.text_count)
-        emptyText = root.findViewById(R.id.text_empty)
-        recycler = root.findViewById(R.id.recycler_clips)
+        val editBar = rootLayout.findViewById<LinearLayout>(R.id.ime_edit_bar)
+        val btnUndo = rootLayout.findViewById<ImageButton>(R.id.btn_undo)
+        val btnRedo = rootLayout.findViewById<ImageButton>(R.id.btn_redo)
+        val btnLeft = rootLayout.findViewById<ImageButton>(R.id.btn_dpad_left)
+        val btnUp = rootLayout.findViewById<ImageButton>(R.id.btn_dpad_up)
+        val btnDown = rootLayout.findViewById<ImageButton>(R.id.btn_dpad_down)
+        val btnRight = rootLayout.findViewById<ImageButton>(R.id.btn_dpad_right)
+        val btnBackspace = rootLayout.findViewById<ImageButton>(R.id.btn_backspace)
+        val btnEnter = rootLayout.findViewById<ImageButton>(R.id.btn_enter)
 
-        val editBar = root.findViewById<LinearLayout>(R.id.ime_edit_bar)
-        val btnUndo = root.findViewById<ImageButton>(R.id.btn_undo)
-        val btnRedo = root.findViewById<ImageButton>(R.id.btn_redo)
-        val btnLeft = root.findViewById<ImageButton>(R.id.btn_dpad_left)
-        val btnUp = root.findViewById<ImageButton>(R.id.btn_dpad_up)
-        val btnDown = root.findViewById<ImageButton>(R.id.btn_dpad_down)
-        val btnRight = root.findViewById<ImageButton>(R.id.btn_dpad_right)
-        val btnBackspace = root.findViewById<ImageButton>(R.id.btn_backspace)
-        val btnEnter = root.findViewById<ImageButton>(R.id.btn_enter)
-
-        quickActionsOverlay = root.findViewById(R.id.overlay_quick_actions)
-        overlayPreviewText = root.findViewById(R.id.overlay_preview_text)
-        overlayPinLabel = root.findViewById(R.id.action_pin_label)
-        overlayPinIcon = root.findViewById(R.id.action_pin_icon)
-        overlayEditIcon = root.findViewById(R.id.action_edit_icon)
-        overlayDeleteIcon = root.findViewById(R.id.action_delete_icon)
+        quickActionsOverlay = rootLayout.findViewById(R.id.overlay_quick_actions)
+        overlayPreviewText = rootLayout.findViewById(R.id.overlay_preview_text)
+        overlayPinLabel = rootLayout.findViewById(R.id.action_pin_label)
+        overlayPinIcon = rootLayout.findViewById(R.id.action_pin_icon)
+        overlayEditIcon = rootLayout.findViewById(R.id.action_edit_icon)
+        overlayDeleteIcon = rootLayout.findViewById(R.id.action_delete_icon)
 
         contentContainer.setBackgroundColor(theme.backgroundColor)
         header.setBackgroundColor(ThemeUtils.headerBackgroundColor(theme))
@@ -101,6 +114,7 @@ class ClipboardIMEService : InputMethodService() {
         emptyText.setTextColor(theme.subTextColor)
 
         switchBtn.setColorFilter(theme.accentColor)
+        btnToggleFloating.setColorFilter(theme.subTextColor)
         addBtn.setColorFilter(theme.subTextColor)
         closeBtn.setColorFilter(theme.subTextColor)
 
@@ -120,14 +134,44 @@ class ClipboardIMEService : InputMethodService() {
         addBtn.setOnClickListener { openCreateInHostApp() }
         closeBtn.setOnClickListener { requestHideSelf(0) }
 
+        btnToggleFloating.setOnClickListener {
+            isFloating = !isFloating
+            applyWindowMode()
+        }
+
+        header.setOnTouchListener { _, event ->
+            if (!isFloating) return@setOnTouchListener false
+            val w = window?.window ?: return@setOnTouchListener false
+            val lp = w.attributes
+
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    dragStartX = event.rawX
+                    dragStartY = event.rawY
+                    initialX = lp.x
+                    initialY = lp.y
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    lp.x = initialX + (event.rawX - dragStartX).toInt()
+                    lp.y = initialY + (event.rawY - dragStartY).toInt()
+                    floatingX = lp.x
+                    floatingY = lp.y
+                    w.attributes = lp
+                    true
+                }
+                else -> false
+            }
+        }
+
         btnUndo.setOnClickListener { triggerEditAction { performUndo() } }
         btnRedo.setOnClickListener { triggerEditAction { performRedo() } }
-        btnLeft.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_LEFT) } }
-        btnUp.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_UP) } }
-        btnDown.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_DOWN) } }
-        btnRight.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DPAD_RIGHT) } }
-        btnBackspace.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL) } }
-        btnEnter.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_ENTER) } }
+        btnLeft.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_LEFT) } }
+        btnUp.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_UP) } }
+        btnDown.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_DOWN) } }
+        btnRight.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(KeyEvent.KEYCODE_DPAD_RIGHT) } }
+        btnBackspace.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL) } }
+        btnEnter.setOnClickListener { triggerEditAction { sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER) } }
 
         quickActionsOverlay.setOnClickListener {
             quickActionsOverlay.visibility = View.GONE
@@ -148,8 +192,46 @@ class ClipboardIMEService : InputMethodService() {
         )
         recycler.adapter = adapter
 
+        applyWindowMode()
         refreshList()
-        return root
+        return rootLayout
+    }
+
+    /** 通常ドックモードとフローティングパレットモードを切り替える */
+    private fun applyWindowMode() {
+        val w = window?.window ?: return
+        val lp = w.attributes
+
+        if (isFloating) {
+            btnToggleFloating.setImageResource(R.drawable.ic_dock_bottom_24)
+            btnToggleFloating.contentDescription = "ドックに戻す"
+
+            w.setGravity(Gravity.TOP or Gravity.START)
+            lp.width = ThemeUtils.dp(this, 300f)
+            lp.height = ThemeUtils.dp(this, 270f)
+            lp.x = floatingX
+            lp.y = floatingY
+
+            contentContainer.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        } else {
+            btnToggleFloating.setImageResource(R.drawable.ic_floating_24)
+            btnToggleFloating.contentDescription = "フローティング表示"
+
+            w.setGravity(Gravity.BOTTOM)
+            lp.width = ViewGroup.LayoutParams.MATCH_PARENT
+            lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            lp.x = 0
+            lp.y = 0
+
+            contentContainer.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                ThemeUtils.dp(this, theme.keyboardHeightDp)
+            )
+        }
+        w.attributes = lp
     }
 
     private fun refreshList() {
@@ -172,38 +254,50 @@ class ClipboardIMEService : InputMethodService() {
         action()
     }
 
+    /**
+     * ブラウザやWebView（Chromium）でも確実に動作する物理キーボード互換のUndo/Redo
+     */
     private fun performUndo() {
         val ic = currentInputConnection ?: return
-        val success = ic.performContextMenuAction(android.R.id.undo)
-        if (!success) {
-            sendCtrlKey(android.view.KeyEvent.KEYCODE_Z, false)
+        val handled = ic.performContextMenuAction(android.R.id.undo)
+        if (!handled) {
+            sendCtrlKeySequence(KeyEvent.KEYCODE_Z, false)
         }
     }
 
     private fun performRedo() {
         val ic = currentInputConnection ?: return
-        val success = ic.performContextMenuAction(android.R.id.redo)
-        if (!success) {
-            sendCtrlKey(android.view.KeyEvent.KEYCODE_Z, true)
+        val handled = ic.performContextMenuAction(android.R.id.redo)
+        if (!handled) {
+            sendCtrlKeySequence(KeyEvent.KEYCODE_Z, true)
         }
     }
 
-    private fun sendCtrlKey(keyCode: Int, shift: Boolean) {
+    private fun sendCtrlKeySequence(keyCode: Int, shift: Boolean) {
         val ic = currentInputConnection ?: return
-        val now = android.os.SystemClock.uptimeMillis()
-        val meta = android.view.KeyEvent.META_CTRL_ON or (if (shift) android.view.KeyEvent.META_SHIFT_ON else 0)
-        ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCode, 0, meta))
-        ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCode, 0, meta))
+        val now = SystemClock.uptimeMillis()
+
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_CTRL_LEFT, 0, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON))
+        if (shift) {
+            ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT, 0, KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON))
+        }
+
+        val meta = KeyEvent.META_CTRL_ON or (if (shift) KeyEvent.META_SHIFT_ON else 0)
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0, meta))
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0, meta))
+
+        if (shift) {
+            ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT, 0, KeyEvent.META_CTRL_ON))
+        }
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_CTRL_LEFT, 0, 0))
     }
 
     private fun commitClip(item: ClipItem) {
-        // テキストの場合
         if (item.mimeType == "text/plain" || item.filePath == null) {
             currentInputConnection?.commitText(item.text.orEmpty(), 1)
             return
         }
 
-        // 画像・ファイルの場合
         val file = java.io.File(item.filePath!!)
         if (!file.exists()) {
             android.widget.Toast.makeText(this, "ファイルが見つかりません", android.widget.Toast.LENGTH_SHORT).show()
@@ -324,12 +418,12 @@ class ClipboardIMEService : InputMethodService() {
             quickActionsOverlay.visibility = View.GONE
         }
 
-        // キーボード起動時にOSクリップボードを即時同期（Gboardでコピーした内容も即反映）
         ClipboardWatcher.syncPrimaryClip(this)
 
         if (::adapter.isInitialized) {
             theme = ThemeConfig.load(this)
             adapter.updateThemeAndItems(theme, ClipStore.getAll(this))
+            applyWindowMode()
         }
         refreshList()
     }

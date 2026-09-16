@@ -2,12 +2,12 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ime_root"
     android:layout_width="match_parent"
-    android:layout_height="240dp">
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:id="@+id/ime_content_container"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="260dp"
         android:orientation="vertical">
 
         <!-- ヘッダー（40dp） -->
@@ -16,15 +16,15 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:gravity="center_vertical"
-            android:paddingHorizontal="6dp">
+            android:paddingHorizontal="4dp">
 
             <ImageButton
                 android:id="@+id/btn_switch_ime"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="前のキーボードに戻る"
-                android:padding="9dp"
+                android:padding="8dp"
                 android:src="@drawable/ic_language_24"
                 android:tint="#0369A1" />
 
@@ -33,7 +33,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:paddingHorizontal="8dp"
+                android:paddingHorizontal="6dp"
                 android:text="クリップボード"
                 android:textColor="#0F172A"
                 android:textSize="13sp"
@@ -43,27 +43,38 @@
                 android:id="@+id/text_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
+                android:layout_marginEnd="4dp"
                 android:textColor="#64748B"
                 android:textSize="11sp" />
 
+            <!-- フローティング切替ボタン -->
+            <ImageButton
+                android:id="@+id/btn_toggle_floating"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="フローティング切替"
+                android:padding="8dp"
+                android:src="@drawable/ic_floating_24"
+                android:tint="#475569" />
+
             <ImageButton
                 android:id="@+id/btn_quick_add"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="定型文を作成"
-                android:padding="9dp"
+                android:padding="8dp"
                 android:src="@drawable/ic_add_24"
                 android:tint="#475569" />
 
             <ImageButton
                 android:id="@+id/btn_close_keyboard"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="キーボードを閉じる"
-                android:padding="9dp"
+                android:padding="8dp"
                 android:src="@drawable/ic_keyboard_hide_24"
                 android:tint="#475569" />
         </LinearLayout>
@@ -73,7 +84,6 @@
             android:layout_width="match_parent"
             android:layout_height="2dp" />
 
-        <!-- クリップ一覧 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_clips"
             android:layout_width="match_parent"
@@ -212,12 +222,12 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- クイックアクション・オーバーレイ -->
+    <!-- クイックアクション・オーバーレイ（高視認性 bg_overlay_card に更新） -->
     <LinearLayout
         android:id="@+id/overlay_quick_actions"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#99000000"
+        android:background="#800F172A"
         android:clickable="true"
         android:focusable="true"
         android:gravity="bottom"
@@ -229,7 +239,7 @@
             android:id="@+id/overlay_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_control_dock"
+            android:background="@drawable/bg_overlay_card"
             android:orientation="vertical"
             android:padding="8dp">
 
@@ -241,7 +251,8 @@
                 android:maxLines="1"
                 android:padding="8dp"
                 android:textColor="#0F172A"
-                android:textSize="12sp" />
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <View
                 android:layout_width="match_parent"

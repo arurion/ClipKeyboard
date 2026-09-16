@@ -95,9 +95,15 @@ class ThemeSettingsActivity : AppCompatActivity() {
             binding.presetContainer.addView(btn)
         }
 
+        binding.seekHeight.max = 120
         binding.seekFontScale.max = 70
         bindFields(initialTheme)
 
+        binding.seekHeight.setOnSeekBarChangeListener(object : SimpleSeekBarListener() {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                updateSliderLabels()
+            }
+        })
         binding.seekCorner.setOnSeekBarChangeListener(object : SimpleSeekBarListener() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 updateSliderLabels()
@@ -120,6 +126,8 @@ class ThemeSettingsActivity : AppCompatActivity() {
     }
 
     private fun updateSliderLabels() {
+        val heightVal = 200 + binding.seekHeight.progress
+        binding.labelHeightValue.text = "$heightVal dp"
         binding.labelCornerValue.text = "${binding.seekCorner.progress} dp"
         val percent = 70 + binding.seekFontScale.progress
         binding.labelFontValue.text = "$percent %"
@@ -134,6 +142,7 @@ class ThemeSettingsActivity : AppCompatActivity() {
             field.row.fieldHex.setText(hexVal)
             field.row.fieldSwatch.background = ThemeUtils.roundedDrawable(color, 6f, this)
         }
+        binding.seekHeight.progress = (theme.keyboardHeightDp.toInt() - 200).coerceIn(0, binding.seekHeight.max)
         binding.seekCorner.progress = theme.cornerRadiusDp.toInt().coerceIn(0, binding.seekCorner.max)
         binding.seekFontScale.progress = ((theme.fontScale * 100).toInt() - 70).coerceIn(0, binding.seekFontScale.max)
         binding.switchHaptic.isChecked = theme.hapticFeedbackEnabled
@@ -161,6 +170,7 @@ class ThemeSettingsActivity : AppCompatActivity() {
             subTextColor = colorFields[3].currentColor,
             accentColor = colorFields[4].currentColor,
             dangerColor = colorFields[5].currentColor,
+            keyboardHeightDp = (200 + binding.seekHeight.progress).toFloat(),
             cornerRadiusDp = binding.seekCorner.progress.toFloat(),
             fontScale = (70 + binding.seekFontScale.progress) / 100f,
             hapticFeedbackEnabled = binding.switchHaptic.isChecked

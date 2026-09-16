@@ -22,9 +22,6 @@ object ClipboardWatcher {
         registered = true
     }
 
-    /**
-     * OSクリップボードの最新データを安全に取得・保存する（同期用）
-     */
     fun syncPrimaryClip(context: Context) {
         val appContext = context.applicationContext
         val cm = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -38,6 +35,10 @@ object ClipboardWatcher {
             // ① 画像の場合（image/*）
             if (description.hasMimeType("image/*") || isImageUri(appContext, item.uri)) {
                 val uri = item.uri ?: return
+
+                // 自アプリがペースト用にセットしたクリップなら再保存（無限増殖）を防止
+                if (uri.authority == "${appContext.packageName}.fileprovider") return
+
                 val mime = description.getMimeType(0) ?: appContext.contentResolver.getType(uri) ?: "image/png"
                 saveFileClip(appContext, uri, mime)
                 return
@@ -55,6 +56,8 @@ object ClipboardWatcher {
             // ③ その他のファイル・独自形式
             if (item.uri != null) {
                 val uri = item.uri!!
+                if (uri.authority == "${appContext.packageName}.fileprovider") return
+
                 val mime = description.getMimeType(0) ?: appContext.contentResolver.getType(uri) ?: "application/octet-stream"
                 saveFileClip(appContext, uri, mime)
             }
